@@ -1,14 +1,15 @@
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.annotation import Annotated
 
 from src.db import get_session
 from src.project.project_repository import ProjectRepository
 from src.project.project_service import ProjectService
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
-def depends_project_repository(session: AsyncSession = Depends(get_session)) -> ProjectRepository:
+def depends_project_repository(session: Annotated[AsyncSession, Depends(get_session)]) -> ProjectRepository:
     return ProjectRepository(session)
 
 
-def depends_project_service(repository: ProjectRepository = Depends(depends_project_repository)):
+def depends_project_service(repository: Annotated[ProjectRepository, Depends(depends_project_repository)]):
     return ProjectService(repository)

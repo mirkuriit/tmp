@@ -1,15 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Query, APIRouter
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_204_NO_CONTENT
+from fastapi import APIRouter, Depends
+from starlette.status import HTTP_204_NO_CONTENT
 
-from src.project.project_schema import ProjectGetOne, ProjectUpdate
 from src.project.dependencies import depends_project_service
-from src.project.project_model import Project
-from src.project.project_schema import ProjectCreate
+from src.project.project_schema import ProjectCreate, ProjectGetOne, ProjectUpdate
 from src.project.project_service import ProjectService
-
 
 router = APIRouter(prefix="/project", tags=["project"])
 
@@ -17,7 +14,7 @@ router = APIRouter(prefix="/project", tags=["project"])
 @router.post("")
 async def create_project(
         data: ProjectCreate,
-        project_service: ProjectService = Depends(depends_project_service)
+        project_service: Annotated[ProjectService, Depends(depends_project_service)]
 ) -> ProjectCreate:
    return await project_service.create(data)
 
@@ -25,7 +22,7 @@ async def create_project(
 @router.get("/{project_id}")
 async def get_project(
         project_id: UUID,
-        project_service: ProjectService = Depends(depends_project_service)
+        project_service: Annotated[ProjectService, Depends(depends_project_service)]
 ) -> ProjectGetOne:
    return await project_service.get_one(project_id)
 
@@ -34,7 +31,7 @@ async def get_project(
 async def update_project(
         project_id: UUID,
         data: ProjectUpdate,
-        project_service: ProjectService = Depends(depends_project_service)
+        project_service: Annotated[ProjectService, Depends(depends_project_service)]
 ) -> ProjectUpdate:
    return await project_service.update(project_id, data)
 
@@ -42,7 +39,7 @@ async def update_project(
 @router.delete("/{project_id}", status_code=HTTP_204_NO_CONTENT)
 async def delete_project(
         project_id: UUID,
-        project_service: ProjectService = Depends(depends_project_service)
+        project_service: Annotated[ProjectService, Depends(depends_project_service)]
 ):
    await project_service.delete(project_id)
 

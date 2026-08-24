@@ -1,10 +1,7 @@
-from typing import Optional
 from uuid import UUID
 
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from sqlalchemy import update, select
 
 from src.project.exceptions import ProjectNotFoundException
 from src.project.project_model import Project
@@ -45,7 +42,7 @@ class ProjectRepository:
         await self._session.commit()
 
 
-    async def get_one(self,  project_id: UUID) -> Optional[Project] | None:
+    async def get_one(self,  project_id: UUID) -> Project | None:
         project = await self._session.scalar(select(Project).where(Project.id == project_id, Project.is_deleted == False))
         return project
     
