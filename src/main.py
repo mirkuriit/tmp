@@ -1,10 +1,27 @@
-import asyncio
+from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
 
-import uvicorn
+from src.router.healthcheck import router as healthcheck_router
 
 
-async def main() -> None:
-    uvicorn.run('application:get_app', host='localhost', port=8000, reload=True, factory=True)
+def get_app() -> FastAPI:
+    app = FastAPI(
+        docs_url='/docs',
+        openapi_url='/openapi.json',
+        default_response_class=JSONResponse,
+    )
 
-if __name__ == '__main__':
-    asyncio.run(main())
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=['*'],
+        allow_credentials=True,
+        allow_methods=['*'],
+        allow_headers=['*'],
+    )
+
+    app.include_router(healthcheck_router)
+
+    return app
+
+app = get_app()
