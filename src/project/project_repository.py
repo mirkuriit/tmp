@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import update, select
 
-from project.project_model import Project
-from project.project_schema import ProjectCreate, ProjectUpdate
+from src.project.project_model import Project
+from src.project.project_schema import ProjectCreate, ProjectUpdate
 
 
 class ProjectRepository:
@@ -38,3 +38,4 @@ class ProjectRepository:
     async def get_one(self,  project_id: UUID) -> Optional[Project] | None:
         project = await self._session.scalar(select(Project).where(Project.id == project_id, Project.is_deleted == False))
         return project
+    

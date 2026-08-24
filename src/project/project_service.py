@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from project.project_repository import ProjectRepository
+from src.project.project_repository import ProjectRepository
 from src.project.project_model import Project
 from src.project.project_schema import ProjectCreate, ProjectUpdate
 
