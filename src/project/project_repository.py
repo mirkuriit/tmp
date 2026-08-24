@@ -44,5 +44,7 @@ class ProjectRepository:
 
     async def get_one(self,  project_id: UUID) -> Project | None:
         project = await self._session.scalar(select(Project).where(Project.id == project_id, Project.is_deleted == False))
+        if project is None:
+            raise ProjectNotFoundException()
         return project
     
