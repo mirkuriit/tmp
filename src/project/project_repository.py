@@ -39,6 +39,8 @@ class ProjectRepository:
 
     async def delete(self, project_id: UUID) -> None:
         project = await self._session.scalar(select(Project).where(Project.id == project_id))
+        if project is None:
+            raise ProjectNotFoundException()
         project.is_deleted = True
         await self._session.commit()
 
