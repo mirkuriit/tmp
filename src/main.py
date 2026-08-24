@@ -1,5 +1,6 @@
-import uvicorn
 import asyncio
+
+import uvicorn
 
 
 async def main() -> None:

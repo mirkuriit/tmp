@@ -1,7 +1,7 @@
+from uuid import UUID, uuid4
+
 import sqlalchemy as sa
 from sqlalchemy.orm import DeclarativeMeta, Mapped, declarative_base, mapped_column
-
-from uuid import UUID, uuid4
 
 metadata = sa.MetaData()
 
