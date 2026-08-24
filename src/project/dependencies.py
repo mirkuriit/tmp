@@ -1,6 +1,6 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql.annotation import Annotated
+from typing import Annotated
 
 from src.db import get_session
 from src.project.project_repository import ProjectRepository
