@@ -17,8 +17,8 @@ class ProjectGetOne(Base):
 
 
 class ProjectUpdate(Base):
-    name: str
-    description: str
+    name: str | None
+    description: str | None
 
 
 

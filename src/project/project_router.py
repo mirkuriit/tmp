@@ -30,7 +30,7 @@ async def get_project(
    return await project_service.get_one(project_id)
 
 
-@router.put("/{project_id}")
+@router.patch("/{project_id}")
 async def update_project(
         project_id: UUID,
         data: ProjectUpdate,
