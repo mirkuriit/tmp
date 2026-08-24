@@ -23,7 +23,6 @@ SessionFactory = async_sessionmaker(
 )
 
 
-@asynccontextmanager
 async def get_session() -> AsyncSession:
     async with SessionFactory() as session:
         try:
