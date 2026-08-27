@@ -6,11 +6,11 @@ from src.schemas import Base
 
 class ProjectBase(Base):
     name: str
-    description: str
+    description: Optional[str | None] = None
 
 
 class ProjectCreate(ProjectBase):
-    description: Optional[str | None] = None
+    pass
 
 
 class ProjectResponse(ProjectBase):
@@ -20,7 +20,6 @@ class ProjectResponse(ProjectBase):
 
 class ProjectUpdate(ProjectBase):
     name: Optional[str | None] = None
-    description: Optional[str | None] = None
 
 
 
