@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from src.schemas import Base
@@ -9,7 +10,7 @@ class ProjectBase(Base):
 
 
 class ProjectCreate(ProjectBase):
-    pass
+    description: Optional[str | None] = None
 
 
 class ProjectResponse(ProjectBase):
@@ -18,8 +19,8 @@ class ProjectResponse(ProjectBase):
 
 
 class ProjectUpdate(ProjectBase):
-    name: str | None
-    description: str | None
+    name: Optional[str | None] = None
+    description: Optional[str | None] = None
 
 
 
