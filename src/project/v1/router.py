@@ -15,7 +15,7 @@ router = APIRouter(prefix="/project", tags=["project"])
 async def create_project(
         data: ProjectCreate,
         project_service: Annotated[ProjectService, Depends(depends_project_service)]
-) -> ProjectCreate:
+) -> ProjectResponse:
    return await project_service.create(data)
 
 
@@ -32,7 +32,7 @@ async def update_project(
         project_id: UUID,
         data: ProjectUpdate,
         project_service: Annotated[ProjectService, Depends(depends_project_service)]
-) -> ProjectUpdate:
+) -> ProjectResponse:
    return await project_service.update(project_id, data)
 
 
