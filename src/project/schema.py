@@ -3,20 +3,21 @@ from uuid import UUID
 from src.schemas import Base
 
 
-class ProjectCreate(Base):
-    id: UUID
+class ProjectBase(Base):
     name: str
     description: str
 
 
-class ProjectGetOne(Base):
+class ProjectCreate(ProjectBase):
+    pass
+
+
+class ProjectGetOne(ProjectBase):
     id: UUID
-    name: str
-    description: str
     likes: int
 
 
-class ProjectUpdate(Base):
+class ProjectUpdate(ProjectBase):
     name: str | None
     description: str | None
 
