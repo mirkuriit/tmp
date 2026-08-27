@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.models.base_models import AuditMixin, Base
+from src.models import AuditMixin, Base
 
 
 class Project(AuditMixin, Base):

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from src.schemas.base_schema import Base
+from src.schemas import Base
 
 
 class ProjectCreate(Base):

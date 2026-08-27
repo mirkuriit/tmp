@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends
 from starlette.status import HTTP_204_NO_CONTENT
 
 from src.project.dependencies import depends_project_service
-from src.project.project_schema import ProjectCreate, ProjectGetOne, ProjectUpdate
-from src.project.project_service import ProjectService
+from src.project.schema import ProjectCreate, ProjectGetOne, ProjectUpdate
+from src.project.service import ProjectService
 
 router = APIRouter(prefix="/project", tags=["project"])
 

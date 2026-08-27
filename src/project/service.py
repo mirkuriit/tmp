@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from src.project.project_model import Project
-from src.project.project_repository import ProjectRepository
-from src.project.project_schema import ProjectCreate, ProjectUpdate
+from src.project.model import Project
+from src.project.repository import ProjectRepository
+from src.project.schema import ProjectCreate, ProjectUpdate
 
 
 class ProjectService:

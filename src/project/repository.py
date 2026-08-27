@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.project.exceptions import ProjectNotFoundException
-from src.project.project_model import Project
-from src.project.project_schema import ProjectCreate, ProjectUpdate
+from src.project.model import Project
+from src.project.schema import ProjectCreate, ProjectUpdate
 
 
 class ProjectRepository:
