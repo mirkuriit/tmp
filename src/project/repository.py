@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, ColumnElement
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.project.exceptions import ProjectNotFoundException
@@ -13,6 +13,19 @@ class ProjectRepository:
         self._session = db_session
 
 
+    async def _get_one(
+            self,
+            project_id: UUID,
+            is_deleted: bool = True,
+    ) -> Project | None:
+        filters = [
+            Project.id == project_id,
+            Project.is_deleted == is_deleted
+        ]
+
+        return await self._session.scalar(select(Project).where(*filters))
+
+
     async def create(self, data: ProjectCreate) -> Project:
         project = Project(**data.model_dump())
         self._session.add(project)
@@ -21,10 +34,8 @@ class ProjectRepository:
         return project
 
 
-    async def update(self, project_id: UUID, data: ProjectUpdate) -> Project:
-        project = await self._session.scalar(select(Project).where(Project.id == project_id, Project.is_deleted == False))
-        if project is None:
-            raise ProjectNotFoundException()
+    async def update(self, project_id: UUID, data: ProjectUpdate) -> Project | None:
+        project = await self.get_one(project_id)
 
         for field, value in data.model_dump(exclude_unset=True).items():
             setattr(project, field, value)
@@ -35,16 +46,13 @@ class ProjectRepository:
     
 
     async def delete(self, project_id: UUID) -> None:
-        project = await self._session.scalar(select(Project).where(Project.id == project_id))
-        if project is None:
-            raise ProjectNotFoundException()
+        project = await self.get_one(project_id)
+        ### TODO сделать чтобы исключение на отсуствие объекта кидалось на уровне сервиса
         project.is_deleted = True
         await self._session.commit()
 
 
     async def get_one(self,  project_id: UUID) -> Project | None:
-        project = await self._session.scalar(select(Project).where(Project.id == project_id, Project.is_deleted == False))
-        if project is None:
-            raise ProjectNotFoundException()
+        project = await self.get_one(project_id)
         return project
     
