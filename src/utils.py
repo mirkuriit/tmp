@@ -1,2 +1,2 @@
 def import_models():
-    pass
+    from src.project.model import Project
