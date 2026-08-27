@@ -12,7 +12,7 @@ class ProjectCreate(ProjectBase):
     pass
 
 
-class ProjectGetOne(ProjectBase):
+class ProjectResponse(ProjectBase):
     id: UUID
     likes: int
 

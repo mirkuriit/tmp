@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from starlette.status import HTTP_204_NO_CONTENT
 
 from src.project.dependencies import depends_project_service
-from src.project.schema import ProjectCreate, ProjectGetOne, ProjectUpdate
+from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
 from src.project.service import ProjectService
 
 router = APIRouter(prefix="/project", tags=["project"])
@@ -23,7 +23,7 @@ async def create_project(
 async def get_project(
         project_id: UUID,
         project_service: Annotated[ProjectService, Depends(depends_project_service)]
-) -> ProjectGetOne:
+) -> ProjectResponse:
    return await project_service.get_one(project_id)
 
 
