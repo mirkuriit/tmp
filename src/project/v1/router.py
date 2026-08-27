@@ -8,7 +8,7 @@ from src.project.dependencies import depends_project_service
 from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
 from src.project.service import ProjectService
 
-router = APIRouter(prefix="/project", tags=["project"])
+router = APIRouter(prefix="/project/v1", tags=["Project V1"])
 
 
 @router.post("")
