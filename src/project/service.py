@@ -5,7 +5,7 @@ from src.project.mapper import ProjectMapper
 from src.project.model import Project
 from src.project.repository import ProjectRepository
 from src.project.schema import ProjectCreate, ProjectUpdate, ProjectResponse
-
+from src.logger import logger
 
 class ProjectService:
     def __init__(self, repository: ProjectRepository):
@@ -15,7 +15,13 @@ class ProjectService:
     async def _get_one(self, project_id: UUID) -> Project:
         project = await self._repository.get_one_or_none(project_id)
         if project is None:
-            raise ProjectNotFoundException(detail="Project not found")
+            detail = f"Project with id: {project_id} not found"
+            exception = ProjectNotFoundException(detail=detail)
+            logger.exception(
+                detail,
+                exception=exception,
+            )
+            raise exception
         return project
 
 
