@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from src.logger import logger
-from src.project.exceptions import ProjectNotFoundException
+from src.exceptions import NotFoundException
 from src.project.mapper import ProjectMapper
 from src.project.model import Project
 from src.project.repository import ProjectRepository
@@ -17,7 +17,7 @@ class ProjectService:
         project = await self._repository.get_one_or_none(project_id)
         if project is None:
             detail = f"Project with id: {project_id} not found"
-            exception = ProjectNotFoundException(detail=detail)
+            exception = NotFoundException(detail=detail)
             logger.exception(
                 detail,
                 exception=exception,
