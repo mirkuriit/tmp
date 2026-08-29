@@ -1,14 +1,12 @@
 import json
+import logging
 import sys
-
 from contextvars import ContextVar
-from uuid import UUID, uuid4
-
-from src.config import settings
+from uuid import UUID
 
 from loguru import logger
-import logging
 
+from src.config import settings
 
 context_correlation_id: ContextVar[UUID | str | None] = ContextVar(
     "correlation_id", default=None

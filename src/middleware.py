@@ -1,10 +1,10 @@
 import uuid
 
 from fastapi import Request
-from fastapi.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.logger import context_correlation_id, context_request_info, logger
+
 
 class LogMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):

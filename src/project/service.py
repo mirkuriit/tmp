@@ -1,11 +1,12 @@
 from uuid import UUID
 
+from src.logger import logger
 from src.project.exceptions import ProjectNotFoundException
 from src.project.mapper import ProjectMapper
 from src.project.model import Project
 from src.project.repository import ProjectRepository
-from src.project.schema import ProjectCreate, ProjectUpdate, ProjectResponse
-from src.logger import logger
+from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
+
 
 class ProjectService:
     def __init__(self, repository: ProjectRepository):

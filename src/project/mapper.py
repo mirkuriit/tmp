@@ -1,6 +1,7 @@
 from src.project.model import Project
 from src.project.schema import ProjectCreate, ProjectResponse
 
+
 class ProjectMapper:
     @staticmethod
     def schema_to_model(data: ProjectCreate) -> Project:
