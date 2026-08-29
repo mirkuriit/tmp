@@ -1,4 +1,4 @@
-FROM python:3.14 AS requirements-stage
+FROM python:3.14-slim AS requirements-stage
 
 WORKDIR /tmp
 
@@ -8,7 +8,7 @@ COPY ./pyproject.toml ./poetry.lock* /tmp/
 
 RUN poetry self add poetry-plugin-export && poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-FROM python:3.14
+FROM python:3.14-slim
 
 WORKDIR /app
 
