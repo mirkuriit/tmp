@@ -4,7 +4,7 @@ from fastapi import Request
 from fastapi.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.logger import conntext_correlation_id, context_request_info, logger
+from src.logger import context_correlation_id, context_request_info, logger
 
 class LogMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
@@ -15,7 +15,7 @@ class LogMiddleware(BaseHTTPMiddleware):
         request_url = request.url.path
         method = request.method
 
-        conntext_correlation_id_token = conntext_correlation_id.set(correlation_id)
+        conntext_correlation_id_token = context_correlation_id.set(correlation_id)
         request_token = context_request_info.set(
             {
                 "method": method,
@@ -28,13 +28,12 @@ class LogMiddleware(BaseHTTPMiddleware):
             status_code = response.status_code
             request_info["status_code"] = status_code
             response.headers["x-correlation-id"] = correlation_id
+            logger.info("http_request")
             return response
         except Exception as ex:
-            exception = str(ex)
-            request_info["exception"] = exception
             request_info["status_code"] = 500
+            logger.exception("Something was wrong", exception=str(ex))
             raise
         finally:
-            logger.info("http_request")
             context_request_info.reset(request_token)
-            conntext_correlation_id.reset(conntext_correlation_id_token)
+            context_correlation_id.reset(conntext_correlation_id_token)

@@ -10,11 +10,11 @@ from loguru import logger
 import logging
 
 
-conntext_correlation_id: ContextVar[UUID | str | None] = ContextVar(
+context_correlation_id: ContextVar[UUID | str | None] = ContextVar(
     "correlation_id", default=None
 )
 context_request_info: ContextVar[dict | None] = ContextVar(
-    "request_info", default=dict()
+    "request_info", default=None
 )
 
 def disable_sqlalchemy_logs():
@@ -23,7 +23,7 @@ def disable_sqlalchemy_logs():
 
 def serialize(record):
     subset = {
-        "correlation_id" : conntext_correlation_id.get(),
+        "correlation_id" : context_correlation_id.get(),
         "timestamp": record["time"].isoformat(),
         "level": record["level"].name,
         "location": {
