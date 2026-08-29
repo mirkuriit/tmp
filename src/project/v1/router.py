@@ -14,7 +14,7 @@ router = APIRouter(prefix="/project/v1", tags=["Project V1"])
 @router.post("")
 async def create_project(
         data: ProjectCreate,
-        project_service: Annotated[ProjectService, Depends(depends_project_service)]
+        project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=False))]
 ) -> ProjectResponse:
    return await project_service.create(data)
 
@@ -22,7 +22,7 @@ async def create_project(
 @router.get("/{project_id}")
 async def get_project(
         project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(depends_project_service)]
+        project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=True))]
 ) -> ProjectResponse:
    return await project_service.get_one(project_id)
 
@@ -31,7 +31,7 @@ async def get_project(
 async def update_project(
         project_id: UUID,
         data: ProjectUpdate,
-        project_service: Annotated[ProjectService, Depends(depends_project_service)]
+        project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=False))]
 ) -> ProjectResponse:
    return await project_service.update(project_id, data)
 
@@ -39,7 +39,7 @@ async def update_project(
 @router.delete("/{project_id}", status_code=HTTP_204_NO_CONTENT)
 async def delete_project(
         project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(depends_project_service)]
+        project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=False))]
 ):
    await project_service.delete(project_id)
 

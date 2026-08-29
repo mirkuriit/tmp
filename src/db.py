@@ -1,3 +1,4 @@
+from collections.abc import Callable
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -21,14 +22,15 @@ SessionFactory = async_sessionmaker(
     expire_on_commit=False,
 )
 
+def get_session(read_only: bool = False) -> Callable:
+    async def wrapper() -> AsyncSession:
+        async with SessionFactory() as session:
+            try:
+                yield session
+                if not read_only:
+                    await session.commit()
 
-async def get_session() -> AsyncSession:
-    async with SessionFactory() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+            except Exception:
+                await session.rollback()
+                raise
+    return wrapper
