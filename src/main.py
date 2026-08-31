@@ -21,6 +21,7 @@ def get_app() -> FastAPI:
         allow_methods=['*'],
         allow_headers=['*'],
     )
+    app.add_middleware(LogMiddleware)
 
     app.include_router(healthcheck_router)
     app.include_router(project_router_v1)
@@ -28,4 +29,3 @@ def get_app() -> FastAPI:
     return app
 
 app = get_app()
-app.add_middleware(LogMiddleware)
