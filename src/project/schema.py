@@ -1,8 +1,7 @@
-from email.policy import default
-from typing import Self, Annotated
+from typing import Self
 from uuid import UUID
 
-from pydantic import field_validator, model_validator, AnyUrl, Field
+from pydantic import AnyUrl, field_validator, model_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from src.schemas import Base

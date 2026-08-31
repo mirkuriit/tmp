@@ -1,7 +1,7 @@
 from uuid import UUID
 
-from src.logger import logger
 from src.exceptions import NotFoundException
+from src.logger import logger
 from src.project.mapper import ProjectMapper
 from src.project.model import Project
 from src.project.repository import ProjectRepository
