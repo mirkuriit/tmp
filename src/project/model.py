@@ -11,3 +11,5 @@ class Project(AuditMixin, Base):
     name: Mapped[str]
     description: Mapped[str | None] = mapped_column(nullable=True)
     likes: Mapped[int] = mapped_column(default=0)
+    logo_url: Mapped[str] = mapped_column(nullable=True)
+    allow_experimental_functions: Mapped[bool] = mapped_column(default=False)
