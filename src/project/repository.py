@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.project.mapper import ProjectMapper
 from src.project.model import Project
 from src.project.schema import ProjectUpdate
 
@@ -33,8 +34,7 @@ class ProjectRepository:
 
 
     async def update(self, project: Project, updated_schema: ProjectUpdate):
-        for field, value in updated_schema.model_dump(exclude_unset=True).items():
-            setattr(project, field, value)
+        project = ProjectMapper.update_model_from_schema(project, updated_schema)
         await self._session.flush()
         return project
 
