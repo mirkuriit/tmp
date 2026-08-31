@@ -31,3 +31,6 @@ dev = [
 
 [tool.ruff]
 output-format = "concise"
+exclude = [
+    "alembic/versions/0e3f256d364c_create_initial_tables.py",
+]
