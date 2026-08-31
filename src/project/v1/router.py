@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
-from src.project.dependencies import depends_project_service
+from src.project.dependencies import get_project_service, get_read_project_service
 from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
 from src.project.service import ProjectService
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/project/v1", tags=["Project V1"])
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_project(
         data: ProjectCreate,
-        project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=False))]
+        project_service: Annotated[ProjectService, Depends(get_project_service)]
 ) -> ProjectResponse:
    return await project_service.create(data)
 
@@ -23,7 +23,7 @@ async def create_project(
 @router.get("/{project_id}")
 async def get_project(
         project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=True))]
+        project_service: Annotated[ProjectService, Depends(get_read_project_service)]
 ) -> ProjectResponse:
    return await project_service.get_one(project_id)
 
@@ -32,7 +32,7 @@ async def get_project(
 async def update_project(
         project_id: UUID,
         data: ProjectUpdate,
-        project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=False))]
+        project_service: Annotated[ProjectService, Depends(get_project_service)]
 ) -> ProjectResponse:
    return await project_service.update(project_id, data)
 
@@ -40,7 +40,7 @@ async def update_project(
 @router.delete("/{project_id}", status_code=HTTP_204_NO_CONTENT)
 async def delete_project(
         project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=False))]
+        project_service: Annotated[ProjectService, Depends(get_project_service)]
 ):
    await project_service.delete(project_id)
 
