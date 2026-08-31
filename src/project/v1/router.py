@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
 from src.project.dependencies import depends_project_service
@@ -11,7 +12,7 @@ from src.project.service import ProjectService
 router = APIRouter(prefix="/project/v1", tags=["Project V1"])
 
 
-@router.post("")
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_project(
         data: ProjectCreate,
         project_service: Annotated[ProjectService, Depends(depends_project_service(read_only=False))]
