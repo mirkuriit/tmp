@@ -7,13 +7,12 @@ from src.middleware import LogMiddleware
 from src.project.v1.router import router as project_router_v1
 
 
-def get_app() -> FastAPI:
-    app = FastAPI(
-        docs_url='/docs',
-        openapi_url='/openapi.json',
-        default_response_class=JSONResponse,
-    )
+def add_routers(app: FastAPI) -> None:
+    app.include_router(healthcheck_router)
+    app.include_router(project_router_v1)
 
+
+def add_middlewares(app: FastAPI) -> None:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=['*'],
@@ -23,8 +22,15 @@ def get_app() -> FastAPI:
     )
     app.add_middleware(LogMiddleware)
 
-    app.include_router(healthcheck_router)
-    app.include_router(project_router_v1)
+def get_app() -> FastAPI:
+    app = FastAPI(
+        docs_url='/docs',
+        openapi_url='/openapi.json',
+        default_response_class=JSONResponse,
+    )
+
+    add_routers(app)
+    add_middlewares(app)
 
     return app
 
