@@ -21,7 +21,7 @@ class ProjectBase(Base):
             raise PydanticCustomError(
                 'field_is_empty',
                 "{wrong_value} cannot be empty",
-                dict(wrong_value=value)
+                {"wrong_value": value}
             )
         return value.strip()
 
