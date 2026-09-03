@@ -1,21 +1,16 @@
-FROM python:3.14-slim AS requirements-stage
-
-WORKDIR /tmp
-
-RUN pip install poetry
-
-COPY ./pyproject.toml ./poetry.lock* /tmp/
-
-RUN poetry self add poetry-plugin-export && poetry export -f requirements.txt --output requirements.txt --without-hashes
-
 FROM python:3.14-slim
 
 WORKDIR /app
 
-COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
+ENV POETRY_VIRTUALENVS_CREATE=false \
+    PIP_NO_CACHE_DIR=1
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install poetry==2.4.1
+
+COPY ./pyproject.toml ./poetry.lock /app/
+
+RUN poetry install --no-root --without dev
 
 COPY . /app
 
-CMD ["/bin/sh", "start.sh"]
+CMD ["/app/start.sh"]
