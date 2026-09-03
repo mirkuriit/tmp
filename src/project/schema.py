@@ -2,6 +2,7 @@ from typing import Self
 from uuid import UUID
 
 from pydantic import AnyUrl, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 from pydantic_core.core_schema import ValidationInfo
 
 from src.schemas import Base
@@ -16,10 +17,12 @@ class ProjectBase(Base):
     @field_validator("name", "description")
     @classmethod
     def check_is_empty(cls, value: str, info: ValidationInfo):
-        if value is None:
-            return value
-        if len(value.strip()) == 0:
-            raise ValueError(f"{info.field_name} cannot be empty")
+        if isinstance(value, str) and value.strip() == "":
+            raise PydanticCustomError(
+                'field_is_empty',
+                "{wrong_value} cannot be empty",
+                dict(wrong_value=value)
+            )
         return value.strip()
 
 
@@ -50,7 +53,10 @@ class ProjectUpdate(ProjectBase):
     @model_validator(mode="after")
     def check_is_all_none(self) -> Self:
         if not self.model_fields_set:
-            raise ValueError("No fields to update")
+            raise PydanticCustomError(
+                'request_is_empty',
+                "No fields to update"
+            )
         return self
 
 
