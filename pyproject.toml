@@ -3,10 +3,10 @@ name = "eldar-menties-project"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Your Name",email = "you@example.com"}
+    {name = "Egor Mirkuriit",email = "you@example.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<4.0"
 dependencies = [
     "fastapi (>=0.136.1,<0.137.0)",
     "uvicorn (>=0.47.0,<0.48.0)",
@@ -15,10 +15,22 @@ dependencies = [
     "pydantic (>=2.13.4,<3.0.0)",
     "pydantic-settings (>=2.14.1,<3.0.0)",
     "sqlalchemy (>=2.0.49,<3.0.0)",
-    "greenlet (>=3.5.1,<4.0.0)"
+    "greenlet (>=3.5.1,<4.0.0)",
+    "loguru (>=0.7.3,<0.8.0)"
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.16.4,<0.17.0)"
+]
+
+[tool.ruff]
+output-format = "concise"
+exclude = [
+    "alembic/versions/0e3f256d364c_create_initial_tables.py",
+]
