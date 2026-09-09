@@ -1,18 +1,20 @@
 from typing import Self
 from uuid import UUID
 
-from pydantic import AnyUrl, field_validator, model_validator
+from pydantic import AnyUrl, field_validator, model_validator, Field
 from pydantic_core import PydanticCustomError
 from pydantic_core.core_schema import ValidationInfo
 
-from src.schemas import Base
+from src.llm_models.schema import LLMModelCreate, LLMModelResponse, \
+    LLMModelUpdate
+from src.schemas import Base, BaseUpdateValidationMixin
 
 
 class ProjectBase(Base):
     name: str
     allow_experimental_functions: bool
     description: str | None = None
-    logo_url: str | None = None
+    logo_url: str | None = Field(default="https://example.com/")
 
     @field_validator("name", "description")
     @classmethod
@@ -38,26 +40,19 @@ class ProjectBase(Base):
 
 
 class ProjectCreate(ProjectBase):
-    pass
+    llm_models: list[LLMModelCreate]
 
 
 class ProjectResponse(ProjectBase):
     id: UUID
     likes: int
+    llm_models: list[LLMModelResponse]
 
 
-class ProjectUpdate(ProjectBase):
+class ProjectUpdate(ProjectBase, BaseUpdateValidationMixin):
     name: str | None = None
     allow_experimental_functions: bool | None = None
-
-    @model_validator(mode="after")
-    def check_is_all_none(self) -> Self:
-        if not self.model_fields_set:
-            raise PydanticCustomError(
-                'request_is_empty',
-                "No fields to update"
-            )
-        return self
+    llm_models: list[LLMModelUpdate] | None = None
 
 
 

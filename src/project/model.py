@@ -1,7 +1,8 @@
 from uuid import UUID, uuid4
 
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.llm_models.model import LLMModel
 from src.models import AuditMixin, Base
 
 
@@ -13,3 +14,11 @@ class Project(AuditMixin, Base):
     likes: Mapped[int] = mapped_column(default=0)
     logo_url: Mapped[str] = mapped_column(nullable=True)
     allow_experimental_functions: Mapped[bool] = mapped_column(default=False)
+
+    llm_models: Mapped[list["LLMModel"]] = relationship(
+        "LLMModel",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+
