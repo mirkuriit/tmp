@@ -1,6 +1,4 @@
-from loguru import logger
 
-from src import llm_models
 from src.llm_models.model import LLMModel
 from src.project.model import Project
 from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
@@ -19,9 +17,16 @@ class ProjectMapper:
 
     @staticmethod
     def update_model_from_schema(data: Project, updated_data: ProjectUpdate) -> Project:
-        for field, value in updated_data.model_dump(exclude_unset=True).items():
-            if field == "llm_models":
-                data.llm_models = [LLMModel(**model) for model in value]
-            else:
+        for field, value in updated_data.model_dump(exclude_unset=True, exclude={"llm_models"}).items():
                 setattr(data, field, value)
+
+        if "llm_models" in updated_data.model_fields_set and updated_data.llm_models:
+            models_by_id = {model.id: model for model in data.llm_models}
+            for updated_model in updated_data.llm_models:
+                model = models_by_id.get(updated_model.id)
+                if model is None:
+                    continue
+                for field, value in updated_model.model_dump(exclude_unset=True, exclude={"id"}).items():
+                    setattr(model, field, value)
+
         return data

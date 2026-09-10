@@ -1,9 +1,9 @@
-from dataclasses import field
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import field_validator, AnyUrl, Field
+from pydantic import AnyUrl, Field, field_validator
 from pydantic_core import PydanticCustomError
+
 from src.schemas import Base, BaseUpdateValidationMixin
 
 
@@ -52,9 +52,13 @@ class LLMModelCreate(LLMModelBase):
 
 
 class LLMModelUpdate(LLMModelBase, BaseUpdateValidationMixin):
-    pass
+    id: UUID
+    name: str | None = None
+    base_api_url: str  | None = None
+    token_cost: Decimal | None = None
 
 
 class LLMModelResponse(LLMModelBase):
+    id: UUID
     project_id: UUID
 
