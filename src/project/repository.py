@@ -20,11 +20,12 @@ class ProjectRepository:
             *,
             is_deleted: bool = False,
     ):
-        project_filters = [
+        filters = [
             Project.id == project_id,
             Project.is_deleted == is_deleted
         ]
-        return await self._session.scalar(select(Project).where(*project_filters))
+
+        return await self._session.scalar(select(Project).where(*filters))
 
 
     async def create(self, project: Project) -> Project:
@@ -52,16 +53,16 @@ class ProjectRepository:
             self,
             project_id: UUID,
             *,
-            llm_model_page: int | None = None,
-            llm_model_size: int | None = None,
+            page: int | None = None,
+            size: int | None = None,
             is_deleted: bool = False,
     )-> list[LLMModel]:
-        llm_model_filters = [
+        filters = [
             LLMModel.project_id == project_id,
             LLMModel.is_deleted == is_deleted
         ]
-        llm_model_select_statement = select(LLMModel).where(*llm_model_filters).order_by(LLMModel.id)
-        if llm_model_page and llm_model_size:
-            llm_model_select_statement = llm_model_select_statement.limit(llm_model_size).offset((llm_model_page-1)*llm_model_size)
-        return list(await self._session.scalars(llm_model_select_statement))
+        select_statement = select(LLMModel).where(*filters).order_by(LLMModel.id)
+        if page and size:
+            select_statement = select_statement.limit(size).offset((page - 1) * size)
+        return list(await self._session.scalars(select_statement))
     
