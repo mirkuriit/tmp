@@ -17,11 +17,8 @@ class ProjectService:
     async def _get_one(
             self,
             project_id: UUID,
-            *,
-            llm_model_page: int | None = None,
-            llm_model_size: int | None = None
     ) -> Project:
-        project = await self._repository.get_one_or_none(project_id, llm_model_page=llm_model_page, llm_model_size=llm_model_size)
+        project = await self._repository.get_one_or_none(project_id,)
         if project is None:
             detail = f"Project with id: {project_id} not found"
             exception = NotFoundException(detail=detail)
@@ -33,17 +30,29 @@ class ProjectService:
         return project
 
 
-    async def get_one(
+    async def get_one_with_pagination(
             self,
             project_id: UUID,
             llm_model_page: int | None = None,
             llm_model_size: int | None = None
     ) -> ProjectResponse:
-        project = await self._get_one(
+        project = await self._repository.get_one_or_none(
+            project_id
+        )
+        if project is None:
+            detail = f"Project with id: {project_id} not found"
+            exception = NotFoundException(detail=detail)
+            logger.exception(
+                detail,
+                exception=exception,
+            )
+            raise exception
+        llm_models = await self._repository.get_llm_models_by_project_id(
             project_id,
             llm_model_page=llm_model_page,
-            llm_model_size=llm_model_size
+            llm_model_size=llm_model_size,
         )
+        project.llm_models = llm_models
         return self._mapper.model_to_schema(project)
 
     

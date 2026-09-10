@@ -27,7 +27,7 @@ async def get_project(
         llm_model_page: int | None = Query(ge=1, default=None),
         llm_model_size: int | None = Query(ge=1, default=None),
 ) -> ProjectResponse:
-   return await project_service.get_one(project_id, llm_model_page=llm_model_page, llm_model_size=llm_model_size)
+   return await project_service.get_one_with_pagination(project_id, llm_model_page=llm_model_page, llm_model_size=llm_model_size)
 
 
 @router.patch("/{project_id}")
@@ -46,6 +46,14 @@ async def delete_project(
 ):
    await project_service.delete(project_id)
 
+
+@router.delete("/{project_id}/{llm_model_id}", status_code=HTTP_204_NO_CONTENT)
+async def delete_projects_lmm_model(
+        project_id: UUID,
+         llm_model_id:UUID,
+        project_service: Annotated[ProjectService, Depends(get_project_service)]
+):
+   await project_service.delete(project_id)
 
 
 
