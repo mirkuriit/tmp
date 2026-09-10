@@ -30,7 +30,7 @@ class ProjectRepository:
             LLMModel.project_id == project_id,
             LLMModel.is_deleted == is_deleted
         ]
-        llm_model_select_statement = select(LLMModel).where(*llm_model_filters)
+        llm_model_select_statement = select(LLMModel).where(*llm_model_filters).order_by(LLMModel.id)
         if llm_model_page and llm_model_size:
             llm_model_select_statement = llm_model_select_statement.limit(llm_model_size).offset((llm_model_page-1)*llm_model_size)
         project_select_statement = select(Project).where(*project_filters)
