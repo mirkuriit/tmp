@@ -1,17 +1,30 @@
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import AnyUrl, Field, field_validator
 from pydantic_core import PydanticCustomError
 
-from src.llm_models.schema import LLMModelCreate, LLMModelResponse, LLMModelUpdate
 from src.schemas import Base, BaseUpdateValidationMixin
 
 
-class ProjectBase(Base):
+class LLMModelBase(Base):
     name: str
-    allow_experimental_functions: bool
     description: str | None = None
-    logo_url: str | None = Field(default="https://example.com/")
+    base_api_url: str = Field(default="https://example.com/")
+    token_cost: Decimal
+
+    @field_validator("token_cost")
+    @classmethod
+    def check_is_token_invalid(cls, value: Decimal) -> Decimal | None:
+        if value >= 0:
+            return value
+
+        raise PydanticCustomError(
+            "decimal_is_negative",
+            "cost {wrong_value} cannot be negative",
+            {"wrong_value": value}
+        )
+
 
     @field_validator("name", "description")
     @classmethod
@@ -25,7 +38,7 @@ class ProjectBase(Base):
         return value.strip() if value else value
 
 
-    @field_validator("logo_url")
+    @field_validator("base_api_url")
     @classmethod
     def check_is_url_invalid(cls, value: str | None) -> str | None:
         if value is None:
@@ -34,24 +47,18 @@ class ProjectBase(Base):
         return value
 
 
+class LLMModelCreate(LLMModelBase):
+    pass
 
 
-class ProjectCreate(ProjectBase):
-    llm_models: list[LLMModelCreate]
-
-
-class ProjectResponse(ProjectBase):
+class LLMModelUpdate(LLMModelBase, BaseUpdateValidationMixin):
     id: UUID
-    likes: int
-    llm_models: list[LLMModelResponse]
-
-
-class ProjectUpdate(ProjectBase, BaseUpdateValidationMixin):
     name: str | None = None
-    allow_experimental_functions: bool | None = None
-    llm_models: list[LLMModelUpdate] | None = None
+    token_cost: Decimal | None = None
+    base_api_url: str | None
 
 
-
-
+class LLMModelResponse(LLMModelBase):
+    id: UUID
+    project_id: UUID
 
