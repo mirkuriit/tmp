@@ -36,17 +36,7 @@ class ProjectService:
             llm_model_page: int | None = None,
             llm_model_size: int | None = None
     ) -> ProjectResponse:
-        project = await self._repository.get_one_or_none(
-            project_id
-        )
-        if project is None:
-            detail = f"Project with id: {project_id} not found"
-            exception = NotFoundException(detail=detail)
-            logger.exception(
-                detail,
-                exception=exception,
-            )
-            raise exception
+        project = await self._repository._get_one(project_id)
         llm_models = await self._repository.get_llm_models_by_project_id(
             project_id,
             page=llm_model_page,
