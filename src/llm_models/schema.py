@@ -9,7 +9,7 @@ from src.schemas import Base, BaseUpdateValidationMixin
 
 class LLMModelBase(Base):
     name: str
-    description: str | None
+    description: str | None = None
     base_api_url: str = Field(default="https://example.com/")
     token_cost: Decimal
 
