@@ -16,14 +16,14 @@ class ProjectBase(Base):
 
     @field_validator("name", "description")
     @classmethod
-    def check_is_empty(cls, value: str, info: ValidationInfo):
+    def check_is_empty(cls, value: str):
         if isinstance(value, str) and value.strip() == "":
             raise PydanticCustomError(
                 'field_is_empty',
                 "{wrong_value} cannot be empty",
                 {"wrong_value": value}
             )
-        return value.strip()
+        return value.strip() if value else value
 
 
     @field_validator("logo_url")

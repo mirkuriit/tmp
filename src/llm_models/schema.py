@@ -10,7 +10,7 @@ from src.schemas import Base, BaseUpdateValidationMixin
 class LLMModelBase(Base):
     name: str
     description: str | None = None
-    base_api_url: str | None = Field(default="https://example.com/")
+    base_api_url: str = Field(default="https://example.com/")
     token_cost: Decimal
 
     @field_validator("token_cost")
@@ -35,7 +35,7 @@ class LLMModelBase(Base):
                 "{wrong_value} cannot be empty",
                 {"wrong_value": value}
             )
-        return value.strip()
+        return value.strip() if value else value
 
 
     @field_validator("base_api_url")
@@ -55,6 +55,7 @@ class LLMModelUpdate(LLMModelBase, BaseUpdateValidationMixin):
     id: UUID
     name: str | None = None
     token_cost: Decimal | None = None
+    base_api_url: str | None
 
 
 class LLMModelResponse(LLMModelBase):
