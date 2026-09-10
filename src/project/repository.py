@@ -42,11 +42,14 @@ class ProjectRepository:
 
     async def delete(self, project: Project) -> Project:
         project.is_deleted = True
-        for llm_model in project.llm_models:
-            llm_model.is_deleted = True
-
         await self._session.flush()
         return project
+
+
+    async def delete_llm_model(self, llm_model: LLMModel) -> LLMModel:
+        llm_model.is_deleted = True
+        await self._session.flush()
+        return llm_model
 
 
     async def get_llm_models_by_project_id(

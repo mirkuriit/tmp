@@ -18,7 +18,7 @@ class ProjectService:
             self,
             project_id: UUID,
     ) -> Project:
-        project = await self._repository.get_one_or_none(project_id,)
+        project = await self._repository.get_one_or_none(project_id)
         if project is None:
             detail = f"Project with id: {project_id} not found"
             exception = NotFoundException(detail=detail)
@@ -75,5 +75,7 @@ class ProjectService:
 
     async def delete_llm_model(self, project_id: UUID, llm_model_id: UUID) -> ProjectResponse:
         project = await self._get_one(project_id)
-        deleted_project = await self._repository.delete(project)
-        return self._mapper.model_to_schema(deleted_project)
+        for model in project.llm_models:
+            if model.id == llm_model_id:
+                await self._repository.delete_llm_model(model)
+        return self._mapper.model_to_schema(project)

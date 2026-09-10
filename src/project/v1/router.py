@@ -53,7 +53,7 @@ async def delete_projects_lmm_model(
          llm_model_id:UUID,
         project_service: Annotated[ProjectService, Depends(get_project_service)]
 ):
-   await project_service.delete(project_id)
+   return await project_service.delete_llm_model(project_id, llm_model_id)
 
 
 
