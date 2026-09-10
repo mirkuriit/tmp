@@ -49,8 +49,8 @@ class ProjectService:
             raise exception
         llm_models = await self._repository.get_llm_models_by_project_id(
             project_id,
-            llm_model_page=llm_model_page,
-            llm_model_size=llm_model_size,
+            page=llm_model_page,
+            size=llm_model_size,
         )
         project.llm_models = llm_models
         return self._mapper.model_to_schema(project)

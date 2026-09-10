@@ -10,7 +10,7 @@ from src.schemas import Base, BaseUpdateValidationMixin
 class LLMModelBase(Base):
     name: str
     description: str | None = None
-    base_api_url: str = Field(default="https://example.com/")
+    base_api_url: str | None = Field(default="https://example.com/")
     token_cost: Decimal
 
     @field_validator("token_cost")
@@ -54,7 +54,6 @@ class LLMModelCreate(LLMModelBase):
 class LLMModelUpdate(LLMModelBase, BaseUpdateValidationMixin):
     id: UUID
     name: str | None = None
-    base_api_url: str  | None = None
     token_cost: Decimal | None = None
 
 

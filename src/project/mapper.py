@@ -8,7 +8,6 @@ class ProjectMapper:
     @staticmethod
     def schema_to_model(data: ProjectCreate) -> Project:
         llm_models = [LLMModel(**model.model_dump()) for model in data.llm_models]
-        Project()
         return Project(**data.model_dump(exclude={"llm_models"}), llm_models=llm_models)
 
     @staticmethod
