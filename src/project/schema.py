@@ -1,12 +1,10 @@
-from typing import Self
 from uuid import UUID
 
-from pydantic import AnyUrl, field_validator, model_validator, Field
+from pydantic import AnyUrl, Field, field_validator
 from pydantic_core import PydanticCustomError
 from pydantic_core.core_schema import ValidationInfo
 
-from src.llm_models.schema import LLMModelCreate, LLMModelResponse, \
-    LLMModelUpdate
+from src.llm_models.schema import LLMModelCreate, LLMModelResponse, LLMModelUpdate
 from src.schemas import Base, BaseUpdateValidationMixin
 
 

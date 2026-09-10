@@ -1,10 +1,14 @@
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import AuditMixin, Base
+
+if TYPE_CHECKING:
+    from src.project.model import Project
 
 
 class LLMModel(AuditMixin, Base):
