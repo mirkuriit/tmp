@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
@@ -23,9 +23,11 @@ async def create_project(
 @router.get("/{project_id}")
 async def get_project(
         project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(get_read_project_service)]
+        project_service: Annotated[ProjectService, Depends(get_read_project_service)],
+        llm_model_page: int | None = Query(ge=1, default=None),
+        llm_model_size: int | None = Query(ge=1, default=None),
 ) -> ProjectResponse:
-   return await project_service.get_one(project_id)
+   return await project_service.get_one(project_id, llm_model_page=llm_model_page, llm_model_size=llm_model_size)
 
 
 @router.patch("/{project_id}")
@@ -43,6 +45,7 @@ async def delete_project(
         project_service: Annotated[ProjectService, Depends(get_project_service)]
 ):
    await project_service.delete(project_id)
+
 
 
 
