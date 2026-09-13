@@ -57,15 +57,11 @@ class ProjectService:
         return self._mapper.model_to_schema(project)
     
     
-    async def delete(self, project_id: UUID) -> ProjectResponse:
+    async def delete(
+            self,
+            project_id: UUID,
+            llm_model_id: UUID | None = None
+    ) -> ProjectResponse:
         project = await self._get_one(project_id)
-        deleted_project = await self._repository.delete(project)
+        deleted_project = await self._repository.delete(project, llm_model_id)
         return self._mapper.model_to_schema(deleted_project)
-
-
-    async def delete_llm_model(self, project_id: UUID, llm_model_id: UUID) -> ProjectResponse:
-        project = await self._get_one(project_id)
-        for model in project.llm_models:
-            if model.id == llm_model_id:
-                await self._repository.delete_llm_model(model)
-        return self._mapper.model_to_schema(project)

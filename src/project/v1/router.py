@@ -41,21 +41,11 @@ async def update_project(
 
 @router.delete("/{project_id}", status_code=HTTP_204_NO_CONTENT)
 async def delete_project(
+        project_service: Annotated[ProjectService, Depends(get_project_service)],
         project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(get_project_service)]
+        llm_model_id: UUID | None = None,
 ):
-   await project_service.delete(project_id)
-
-
-@router.delete("/{project_id}/{llm_model_id}", status_code=HTTP_204_NO_CONTENT)
-async def delete_projects_lmm_model(
-        project_id: UUID,
-         llm_model_id:UUID,
-        project_service: Annotated[ProjectService, Depends(get_project_service)]
-):
-   return await project_service.delete_llm_model(project_id, llm_model_id)
-
-
+   await project_service.delete(project_id, llm_model_id)
 
 
 

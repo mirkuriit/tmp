@@ -19,6 +19,7 @@ class Project(AuditMixin, Base):
         "LLMModel",
         back_populates="project",
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
+        primaryjoin="and_(Project.id == LLMModel.project_id, LLMModel.is_deleted == False)",
     )
 
