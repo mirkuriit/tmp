@@ -28,7 +28,7 @@ async def get_project(
    return await project_service.get_one(project_id)
 
 
-@router.get("/{project_id}")
+@router.get("llm-models/{project_id}/")
 async def get_project_with_pagination(
         project_id: UUID,
         project_service: Annotated[ProjectService, Depends(get_read_project_service)],
