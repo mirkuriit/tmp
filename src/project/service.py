@@ -30,6 +30,12 @@ class ProjectService:
         return project
 
 
+    async def get_one(self, project_id: UUID) -> ProjectResponse:
+        project = await self._get_one(project_id)
+        return self._mapper.model_to_schema(project)
+
+
+
     async def get_one_with_pagination(
             self,
             project_id: UUID,

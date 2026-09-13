@@ -23,6 +23,14 @@ async def create_project(
 @router.get("/{project_id}")
 async def get_project(
         project_id: UUID,
+        project_service: Annotated[ProjectService, Depends(get_read_project_service)]
+) -> ProjectResponse:
+   return await project_service.get_one(project_id)
+
+
+@router.get("/{project_id}")
+async def get_project_with_pagination(
+        project_id: UUID,
         project_service: Annotated[ProjectService, Depends(get_read_project_service)],
         llm_model_page: int | None = Query(ge=1, default=None),
         llm_model_size: int | None = Query(ge=1, default=None),
