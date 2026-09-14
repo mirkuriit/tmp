@@ -1,12 +1,18 @@
+import datetime as dt
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
 from src.project.dependencies import get_project_service, get_read_project_service
-from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
+from src.project.schema import (
+   PaginatedProjectResponse,
+   ProjectCreate,
+   ProjectResponse,
+   ProjectUpdate,
+)
 from src.project.service import ProjectService
 
 router = APIRouter(prefix="/project/v1", tags=["Project V1"])
@@ -20,22 +26,23 @@ async def create_project(
    return await project_service.create(data)
 
 
+@router.get("/")
+async def get_projects(
+        project_service: Annotated[ProjectService, Depends(get_read_project_service)],
+        show_after_datetime: dt.datetime | None = None,
+        show_after_id: UUID | None = None,
+        limit: int = 10
+
+) -> PaginatedProjectResponse:
+   return await project_service.get_many(show_after_datetime, show_after_id, limit)
+
+
 @router.get("/{project_id}")
 async def get_project(
         project_id: UUID,
         project_service: Annotated[ProjectService, Depends(get_read_project_service)]
 ) -> ProjectResponse:
    return await project_service.get_one(project_id)
-
-
-@router.get("llm-models/{project_id}/")
-async def get_project_with_pagination(
-        project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(get_read_project_service)],
-        llm_model_page: int | None = Query(ge=1, default=None),
-        llm_model_size: int | None = Query(ge=1, default=None),
-) -> ProjectResponse:
-   return await project_service.get_one_with_pagination(project_id, llm_model_page=llm_model_page, llm_model_size=llm_model_size)
 
 
 @router.patch("/{project_id}")

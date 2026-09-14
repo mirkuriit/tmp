@@ -1,3 +1,4 @@
+import datetime as dt
 from uuid import UUID
 
 from src.exceptions import NotFoundException
@@ -34,7 +35,11 @@ class ProjectService:
         project = await self._get_one(project_id)
         return self._mapper.model_to_schema(project)
 
-    
+    async def get_many(self, show_after_datetime: dt.datetime | None, show_after_id: UUID | None, limit: int):
+        projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
+        return self._mapper.models_to_pagination_schema(projects)
+
+
     async def create(self, data: ProjectCreate) -> ProjectResponse:
         project = await self._repository.create(self._mapper.schema_to_model(data))
         return self._mapper.model_to_schema(project)

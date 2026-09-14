@@ -1,3 +1,4 @@
+import datetime as dt
 from uuid import UUID
 
 from pydantic import AnyUrl, Field, field_validator
@@ -44,6 +45,13 @@ class ProjectResponse(ProjectBase):
     id: UUID
     likes: int
     llm_models: list[LLMModelResponse]
+
+
+class PaginatedProjectResponse(Base):
+    items: list[ProjectResponse]
+    last_seen_datetime: dt.datetime | None
+    last_seen_id: UUID | None
+
 
 
 class ProjectUpdate(ProjectBase, BaseUpdateValidationMixin):

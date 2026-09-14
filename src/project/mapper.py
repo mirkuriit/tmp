@@ -1,7 +1,13 @@
+from sqlalchemy import Sequence
 
 from src.llm_models.model import LLMModel
 from src.project.model import Project
-from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
+from src.project.schema import (
+    PaginatedProjectResponse,
+    ProjectCreate,
+    ProjectResponse,
+    ProjectUpdate,
+)
 
 
 class ProjectMapper:
@@ -13,6 +19,22 @@ class ProjectMapper:
     @staticmethod
     def model_to_schema(data: Project) -> ProjectResponse:
         return ProjectResponse.model_validate(data)
+
+    @staticmethod
+    def models_to_pagination_schema(projects: Sequence[Project]) -> PaginatedProjectResponse:
+        if not projects:
+            return PaginatedProjectResponse(
+                items=projects,
+                last_seen_id=None,
+                last_seen_datetime=None
+            )
+        return PaginatedProjectResponse(
+            items=projects,
+            last_seen_id=projects[-1].id,
+            last_seen_datetime=projects[-1].created_at
+        )
+
+
 
     @staticmethod
     def update_model_from_schema(data: Project, updated_data: ProjectUpdate) -> Project:
