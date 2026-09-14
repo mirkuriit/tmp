@@ -40,16 +40,12 @@ class ProjectRepository:
         return project
 
 
-    async def   delete(self, project: Project, llm_model_id: UUID | None = None) -> Project:
-        if llm_model_id and project:
-            for model in project.llm_models:
-                if model.id == llm_model_id:
-                    model.is_deleted = True
-        else:
+    async def delete(self, project: Project, llm_model_id: UUID | None = None) -> Project:
+        if project:
             project.is_deleted = True
-            for model in project.llm_models:
+        for model in project.llm_models:
+            if model.id == llm_model_id or llm_model_id is None:
                 model.is_deleted = True
-
         await self._session.flush()
         return project
 
