@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 class LLMModel(AuditMixin, Base):
     __tablename__ = 'llm_models'
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     name: Mapped[str]
     description: Mapped[str | None] = mapped_column(nullable=True)
     base_api_url: Mapped[str]
