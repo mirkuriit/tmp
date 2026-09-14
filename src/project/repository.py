@@ -48,22 +48,4 @@ class ProjectRepository:
                 model.is_deleted = True
         await self._session.flush()
         return project
-
-
-    async def get_llm_models_by_project_id(
-            self,
-            project_id: UUID,
-            *,
-            page: int | None = None,
-            size: int | None = None,
-            is_deleted: bool = False,
-    )-> list[LLMModel]:
-        filters = [
-            LLMModel.project_id == project_id,
-            LLMModel.is_deleted == is_deleted
-        ]
-        select_statement = select(LLMModel).where(*filters).order_by(LLMModel.id)
-        if page and size:
-            select_statement = select_statement.limit(size).offset((page - 1) * size)
-        return list(await self._session.scalars(select_statement))
     
