@@ -5,7 +5,7 @@ from pydantic import AnyUrl, Field, field_validator
 from pydantic_core import PydanticCustomError
 
 from src.llm_models.schema import LLMModelCreate, LLMModelResponse, LLMModelUpdate
-from src.schemas import Base, BaseUpdateValidationMixin
+from src.schemas import Base, BaseUpdateValidationMixin, PaginatedResponse
 
 
 class ProjectBase(Base):
@@ -47,10 +47,8 @@ class ProjectResponse(ProjectBase):
     llm_models: list[LLMModelResponse]
 
 
-class PaginatedProjectResponse(Base):
+class PaginatedProjectResponse(Base, PaginatedResponse):
     items: list[ProjectResponse]
-    last_seen_datetime: dt.datetime | None
-    last_seen_id: UUID | None
 
 
 

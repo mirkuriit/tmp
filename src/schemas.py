@@ -1,4 +1,6 @@
 from typing import Self
+import datetime as dt
+from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 from pydantic_core import PydanticCustomError
@@ -7,6 +9,11 @@ from pydantic_core import PydanticCustomError
 class Base(BaseModel):
     class Config:
         from_attributes = True
+
+
+class PaginatedResponse(BaseModel):
+    last_seen_datetime: dt.datetime | None
+    last_seen_id: UUID | None
 
 
 class BaseUpdateValidationMixin(BaseModel):
