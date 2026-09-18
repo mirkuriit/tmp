@@ -1,3 +1,4 @@
+import datetime as dt
 from uuid import UUID
 
 from src.exceptions import NotFoundException
@@ -14,7 +15,10 @@ class ProjectService:
         self._repository = repository
 
 
-    async def _get_one(self, project_id: UUID) -> Project:
+    async def _get_one(
+            self,
+            project_id: UUID,
+    ) -> Project:
         project = await self._repository.get_one_or_none(project_id)
         if project is None:
             detail = f"Project with id: {project_id} not found"
@@ -31,7 +35,11 @@ class ProjectService:
         project = await self._get_one(project_id)
         return self._mapper.model_to_schema(project)
 
-    
+    async def get_many(self, show_after_datetime: dt.datetime | None, show_after_id: UUID | None, limit: int):
+        projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
+        return self._mapper.models_to_pagination_schema(projects)
+
+
     async def create(self, data: ProjectCreate) -> ProjectResponse:
         project = await self._repository.create(self._mapper.schema_to_model(data))
         return self._mapper.model_to_schema(project)
@@ -43,8 +51,11 @@ class ProjectService:
         return self._mapper.model_to_schema(project)
     
     
-    async def delete(self, project_id: UUID) -> ProjectResponse:
+    async def delete(
+            self,
+            project_id: UUID,
+            llm_model_id: UUID | None = None
+    ) -> ProjectResponse:
         project = await self._get_one(project_id)
-        deleted_project = await self._repository.delete(project)
+        deleted_project = await self._repository.delete(project, llm_model_id)
         return self._mapper.model_to_schema(deleted_project)
-

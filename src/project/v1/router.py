@@ -1,3 +1,4 @@
+import datetime as dt
 from typing import Annotated
 from uuid import UUID
 
@@ -6,7 +7,12 @@ from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
 from src.project.dependencies import get_project_service, get_read_project_service
-from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
+from src.project.schema import (
+   PaginatedProjectResponse,
+   ProjectCreate,
+   ProjectResponse,
+   ProjectUpdate,
+)
 from src.project.service import ProjectService
 
 router = APIRouter(prefix="/project/v1", tags=["Project V1"])
@@ -18,6 +24,17 @@ async def create_project(
         project_service: Annotated[ProjectService, Depends(get_project_service)]
 ) -> ProjectResponse:
    return await project_service.create(data)
+
+
+@router.get("/")
+async def get_projects(
+        project_service: Annotated[ProjectService, Depends(get_read_project_service)],
+        show_after_datetime: dt.datetime | None = None,
+        show_after_id: UUID | None = None,
+        limit: int = 10
+
+) -> PaginatedProjectResponse:
+   return await project_service.get_many(show_after_datetime, show_after_id, limit)
 
 
 @router.get("/{project_id}")
@@ -39,12 +56,11 @@ async def update_project(
 
 @router.delete("/{project_id}", status_code=HTTP_204_NO_CONTENT)
 async def delete_project(
+        project_service: Annotated[ProjectService, Depends(get_project_service)],
         project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(get_project_service)]
+        llm_model_id: UUID | None = None,
 ):
-   await project_service.delete(project_id)
-
-
+   await project_service.delete(project_id, llm_model_id)
 
 
 
