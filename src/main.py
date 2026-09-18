@@ -5,11 +5,13 @@ from starlette.responses import JSONResponse
 from src.healthchek.healthcheck_router import router as healthcheck_router
 from src.middleware import LogMiddleware
 from src.project.v1.router import router as project_router_v1
+from src.user.v1.router import router as user_router_v1
 
 
 def add_routers(app: FastAPI) -> None:
     app.include_router(healthcheck_router)
     app.include_router(project_router_v1)
+    app.include_router(user_router_v1)
 
 
 def add_middlewares(app: FastAPI) -> None:
