@@ -64,7 +64,7 @@ class ProjectRepository:
 
 
     async def delete(self, project: Project, llm_model_id: UUID | None = None) -> Project:
-        if project:
+        if project and llm_model_id is None:
             project.is_deleted = True
         for model in project.llm_models:
             if model.id == llm_model_id or llm_model_id is None:
