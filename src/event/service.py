@@ -4,7 +4,12 @@ from uuid import UUID
 from src.event.mapper import EventMapper
 from src.event.model import Event
 from src.event.repository import EventRepository
-from src.event.schema import EventCreate, EventResponse, EventUpdate
+from src.event.schema import (
+    EventCreate,
+    EventResponse,
+    EventUpdate,
+    PaginatedEventResponse,
+)
 from src.exceptions import NotFoundException
 from src.logger import logger
 
@@ -41,7 +46,7 @@ class EventService:
             show_after_datetime: dt.datetime | None,
             show_after_id: UUID | None,
             limit: int
-    ):
+    ) -> PaginatedEventResponse:
         events = await self._repository.get_many(show_after_datetime,
                                                    show_after_id, limit)
         return self._mapper.models_to_pagination_schema(events)

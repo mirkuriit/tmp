@@ -18,7 +18,7 @@ class EventRepository:
             event_id: UUID,
             *,
             is_deleted: bool = False,
-    ):
+    ) -> Event | None:
         filters = [
             Event.id == event_id,
             Event.is_deleted == is_deleted
@@ -61,7 +61,7 @@ class EventRepository:
         return event
 
 
-    async def update(self, event: Event, updated_schema: EventUpdate):
+    async def update(self, event: Event, updated_schema: EventUpdate) -> Event:
         event = EventMapper.update_model_from_schema(event, updated_schema)
         await self._session.flush()
         return event

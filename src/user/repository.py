@@ -18,7 +18,7 @@ class UserRepository:
             user_id: UUID,
             *,
             is_deleted: bool = False,
-    ):
+    ) -> User | None:
         filters = [
             User.id == user_id,
             User.is_deleted == is_deleted
@@ -59,13 +59,16 @@ class UserRepository:
         await self._session.flush()
         return user
 
-    async def update(self, user: User, updated_schema: UserUpdate):
+    async def update(self, user: User, updated_schema: UserUpdate) -> User:
         user = UserMapper.update_model_from_schema(user, updated_schema)
         await self._session.flush()
         return user
 
-    async def delete(self, user: User,
-                     organization_id: UUID | None = None) -> User:
+    async def delete(
+            self,
+            user: User,
+            organization_id: UUID | None = None
+    ) -> User:
         if user and organization_id is None:
             user.is_deleted = True
         for model in user.organizations:

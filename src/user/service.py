@@ -6,7 +6,7 @@ from src.logger import logger
 from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user.repository import UserRepository
-from src.user.schema import UserCreate, UserResponse, UserUpdate
+from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
 
 
 class UserService:
@@ -35,7 +35,7 @@ class UserService:
         return self._mapper.model_to_schema(user)
 
     async def get_many(self, show_after_datetime: dt.datetime | None,
-                       show_after_id: UUID | None, limit: int):
+                       show_after_id: UUID | None, limit: int) -> PaginatedUserResponse:
         users = await self._repository.get_many(show_after_datetime,
                                                    show_after_id, limit)
         return self._mapper.models_to_pagination_schema(users)
