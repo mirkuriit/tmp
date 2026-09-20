@@ -3,6 +3,7 @@ from uuid import UUID
 
 from sqlalchemy import Sequence, and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user.schema import UserUpdate

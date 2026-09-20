@@ -8,10 +8,10 @@ from starlette.status import HTTP_204_NO_CONTENT
 
 from src.event.dependencies import get_event_service, get_read_event_service
 from src.event.schema import (
-   PaginatedEventResponse,
    EventCreate,
    EventResponse,
    EventUpdate,
+   PaginatedEventResponse,
 )
 from src.event.service import EventService
 

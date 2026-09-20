@@ -1,12 +1,12 @@
 import datetime as dt
 from uuid import UUID
 
-from src.exceptions import NotFoundException
-from src.logger import logger
 from src.event.mapper import EventMapper
 from src.event.model import Event
 from src.event.repository import EventRepository
-from src.event.schema import EventResponse, EventCreate, EventUpdate
+from src.event.schema import EventCreate, EventResponse, EventUpdate
+from src.exceptions import NotFoundException
+from src.logger import logger
 
 
 class EventService:

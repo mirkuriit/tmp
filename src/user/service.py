@@ -6,7 +6,7 @@ from src.logger import logger
 from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user.repository import UserRepository
-from src.user.schema import UserResponse, UserCreate, UserUpdate
+from src.user.schema import UserCreate, UserResponse, UserUpdate
 
 
 class UserService:

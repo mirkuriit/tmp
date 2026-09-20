@@ -1,11 +1,9 @@
-import datetime as dt
 from uuid import UUID
 
 from pydantic import AnyUrl, Field, field_validator
 from pydantic_core import PydanticCustomError
 
-from src.llm_models.schema import LLMModelCreate, LLMModelResponse, LLMModelUpdate
-from src.schemas import Base, BaseUpdateValidationMixin
+from src.schemas import Base
 
 
 class OrganizationBase(Base):

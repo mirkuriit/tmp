@@ -1,8 +1,13 @@
 from sqlalchemy import Sequence
 
 from src.event.model import Event, EventInfo
-from src.event.schema import EventCreate, EventResponse, \
-    PaginatedEventResponse, EventUpdate
+from src.event.schema import (
+    EventCreate,
+    EventResponse,
+    EventUpdate,
+    PaginatedEventResponse,
+)
+
 
 class EventMapper:
     @staticmethod

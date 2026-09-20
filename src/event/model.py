@@ -1,7 +1,7 @@
 import datetime as dt
 
-from sqlalchemy import ForeignKey
 import sqlalchemy as sa
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import AuditMixin, Base

@@ -6,15 +6,14 @@ from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
-from src.user.dependencies import get_user_service, \
-    get_read_user_service, get_user_service, get_read_user_service
+from src.user.dependencies import get_read_user_service, get_user_service
 from src.user.schema import (
-    PaginatedUserResponse,
-    UserCreate,
-    UserResponse,
-    UserUpdate, UserResponse, UserUpdate, PaginatedUserResponse,
+   PaginatedUserResponse,
+   UserCreate,
+   UserResponse,
+   UserUpdate,
 )
-from src.user.service import UserService, UserService
+from src.user.service import UserService
 
 router = APIRouter(prefix="/user/v1", tags=["User V1"])
 

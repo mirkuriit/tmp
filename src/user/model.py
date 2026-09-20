@@ -1,10 +1,8 @@
 from uuid import UUID
 
-from sqlalchemy import String, ForeignKey
-from sqlalchemy.ext import baked
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.llm_models.model import LLMModel
 from src.models import AuditMixin, Base
 
 
@@ -22,7 +20,7 @@ class User(AuditMixin, Base):
     bio: Mapped[str | None] = mapped_column(String(140), nullable=True)
     has_premium: Mapped[bool] = mapped_column(default=False)
     logo_url: Mapped[str | None] = mapped_column(nullable=True)
-    organizations: Mapped[list[Organization]] = relationship(
+    organizations: Mapped[list["Organization"]] = relationship(
         secondary="user_organizations",
         back_populates="users",
         lazy="selectin",

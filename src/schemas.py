@@ -1,5 +1,5 @@
-from typing import Self
 import datetime as dt
+from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator

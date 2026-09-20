@@ -1,16 +1,7 @@
 from sqlalchemy import Sequence
 
-from src.llm_models.model import LLMModel
-from src.project.model import Project
-from src.project.schema import (
-    PaginatedProjectResponse,
-    ProjectCreate,
-    ProjectResponse,
-    ProjectUpdate,
-)
-from src.user.model import User, Organization, UserOrganization
-from src.user.schema import UserCreate, UserResponse, PaginatedUserResponse, \
-    UserUpdate
+from src.user.model import Organization, User
+from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
 
 
 class UserMapper:

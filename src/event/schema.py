@@ -2,10 +2,10 @@ import datetime as dt
 from typing import Self
 from uuid import UUID
 
-from pydantic import field_validator, model_validator, Field
+from pydantic import Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
-from src.schemas import Base, PaginatedResponse, BaseUpdateValidationMixin
+from src.schemas import Base, BaseUpdateValidationMixin, PaginatedResponse
 
 
 class EventInfoBase(Base):
