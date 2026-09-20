@@ -58,9 +58,9 @@ async def update_user(
 async def delete_user(
         user_service: Annotated[UserService, Depends(get_user_service)],
         user_id: UUID,
-        llm_model_id: UUID | None = None,
+        organization_id: UUID | None = None,
 ):
-   await user_service.delete(user_id, llm_model_id)
+   await user_service.delete(user_id, organization_id)
 
 
 
