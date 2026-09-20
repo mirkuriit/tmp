@@ -5,7 +5,8 @@ from pydantic import AnyUrl, Field, field_validator
 from pydantic_core import PydanticCustomError
 
 from src.llm_models.schema import LLMModelCreate, LLMModelResponse, LLMModelUpdate
-from src.organization.schema import OrganizationCreate, OrganizationResponse
+from src.organization.schema import OrganizationCreate, OrganizationResponse, \
+    OrganizationUpdate
 from src.schemas import Base, BaseUpdateValidationMixin, PaginatedResponse
 
 
@@ -52,4 +53,4 @@ class PaginatedUserResponse(Base, PaginatedResponse):
 class UserUpdate(UserBase, BaseUpdateValidationMixin):
     username: str | None
     has_premium: bool | None
-    organizations: list[OrganizationResponse] | None = None
+    organizations: list[OrganizationUpdate] | None = None

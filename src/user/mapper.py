@@ -21,9 +21,6 @@ class UserMapper:
 
     @staticmethod
     def model_to_schema(data: User) -> UserResponse:
-        from loguru import logger
-        logger.info(f"Data: {data.organizations} ,{type(data.organizations)}")
-        logger.info(f"Data: {data.organizations} ,{type(data.organizations)}")
         return UserResponse.model_validate(data)
 
     @staticmethod
