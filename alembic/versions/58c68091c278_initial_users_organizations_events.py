@@ -1,21 +1,21 @@
 """initial_users_organizations_events
 
-Revision ID: 777fc7511917
+Revision ID: 58c68091c278
 Revises: 198c960e0c91
-Create Date: 2026-09-20 22:51:49.900647
+Create Date: 2026-09-20 23:54:23.219805
 
 """
-from collections.abc import Sequence
-
-import sqlalchemy as sa
+from typing import Sequence, Union
 
 from alembic import op
+import sqlalchemy as sa
+
 
 # revision identifiers, used by Alembic.
-revision: str = '777fc7511917'
-down_revision: str | Sequence[str] | None = '198c960e0c91'
-branch_labels: str | Sequence[str] | None = None
-depends_on: str | Sequence[str] | None = None
+revision: str = '58c68091c278'
+down_revision: Union[str, Sequence[str], None] = '198c960e0c91'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
@@ -30,7 +30,8 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=False),
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('organizations',
     sa.Column('name', sa.String(), nullable=False),
@@ -75,7 +76,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.ForeignKeyConstraint(['organization_id'], ['organizations.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('user_id', 'organization_id', 'id')
+    sa.PrimaryKeyConstraint('user_id', 'organization_id', 'id'),
+    sa.UniqueConstraint('user_id', 'organization_id', name='uq_user_id_organization_id')
     )
     # ### end Alembic commands ###
 

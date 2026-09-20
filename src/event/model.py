@@ -1,4 +1,5 @@
 import datetime as dt
+from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy import ForeignKey
@@ -9,7 +10,7 @@ from src.models import AuditMixin, Base
 
 class Event(AuditMixin, Base):
     __tablename__ = 'events'
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str]
     start_date: Mapped[dt.datetime] = mapped_column(sa.TIMESTAMP(timezone=True))
     end_date: Mapped[dt.datetime]  = mapped_column(sa.TIMESTAMP(timezone=True))
@@ -26,6 +27,6 @@ class EventInfo(AuditMixin, Base):
     head_url: Mapped[str | None] = mapped_column(nullable=True)
     location: Mapped[str | None] = mapped_column(nullable=True)
 
-    event_id: Mapped[int] = mapped_column(ForeignKey("events.id"), unique=True)
+    event_id: Mapped[UUID] = mapped_column(ForeignKey("events.id"), unique=True)
     event: Mapped[Event] = relationship(back_populates="event_info", single_parent=True)
 

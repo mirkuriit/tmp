@@ -41,12 +41,8 @@ class EventMapper:
         for field, value in updated_data.model_dump(exclude_unset=True, exclude={"event_info"}).items():
             setattr(data, field, value)
 
-        from loguru import logger
-        logger.info(f"data {data}")
-
 
         if "event_info" in updated_data.model_fields_set and updated_data.event_info:
-            logger.info(f"updated data {updated_data}")
             for field, value in updated_data.event_info.model_dump(exclude_unset=True, exclude={"id"}).items():
                 setattr(data.event_info, field, value)
 

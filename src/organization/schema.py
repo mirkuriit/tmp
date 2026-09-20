@@ -38,7 +38,8 @@ class OrganizationCreate(OrganizationBase):
 
 
 class OrganizationUpdate(OrganizationBase):
-    pass
+    id: UUID
+    name: str | None = None
 
 
 class OrganizationResponse(OrganizationBase):

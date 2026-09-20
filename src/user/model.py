@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import AuditMixin, Base
@@ -13,7 +13,9 @@ class UserOrganization(AuditMixin, Base):
     user: Mapped["User"] = relationship(back_populates="user_organizations")
     organization: Mapped["Organization"] = relationship(back_populates="organization_users")
 
-
+    __table_args__ = (
+        UniqueConstraint("user_id", "organization_id", name="uq_user_id_organization_id"),
+    )
 class User(AuditMixin, Base):
     __tablename__ = 'users'
     username: Mapped[str]
