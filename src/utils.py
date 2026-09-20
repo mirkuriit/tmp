@@ -1,4 +1,5 @@
 def import_models():
     from src.llm_models.model import LLMModel  # noqa: F401
     from src.project.model import Project  # noqa: F401
-    from src.user.model import UserOrganization, User, Organization
+    from src.user.model import UserOrganization, User, Organization  # noqa: F401
+    from src.event.model import Event, EventInfo  # noqa: F401
