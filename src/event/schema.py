@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
+from src.event.exceptions import InvalidStartDateError
 from src.event_info.schema import EventInfoCreate, EventInfoResponse, EventInfoUpdate
 from src.schemas import Base, BaseUpdateValidationMixin, PaginatedResponse
 
@@ -29,11 +30,10 @@ class EventBase(Base):
      @model_validator(mode='after')
      def check_is_valid_date(self) -> Self:
          if self.end_date and self.start_date and self.end_date < self.start_date:
-                raise PydanticCustomError(
-                    "start_date_greater_than_end",
-                    "start_date:{start_date} can not be greater than end_date:{end_date}",
-                    {"start_date": self.start_date, "end_date": self.end_date}
-                )
+            raise InvalidStartDateError(
+                start_date=self.start_date,
+                end_date=self.end_date
+            )
          return self
 
 
