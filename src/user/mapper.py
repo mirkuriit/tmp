@@ -1,6 +1,7 @@
 from sqlalchemy import Sequence
 
-from src.user.model import Organization, User
+from src.organization.model import Organization
+from src.user.model import User
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
 
 

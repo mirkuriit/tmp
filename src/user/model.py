@@ -1,9 +1,13 @@
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models import AuditMixin, Base
+
+if TYPE_CHECKING:
+    from src.organization.model import Organization
 
 
 class UserOrganization(AuditMixin, Base):
@@ -16,6 +20,7 @@ class UserOrganization(AuditMixin, Base):
     __table_args__ = (
         UniqueConstraint("user_id", "organization_id", name="uq_user_id_organization_id"),
     )
+
 class User(AuditMixin, Base):
     __tablename__ = 'users'
     username: Mapped[str]
@@ -31,19 +36,4 @@ class User(AuditMixin, Base):
     )
     user_organizations: Mapped[list[UserOrganization]] = relationship(
         back_populates="user"
-    )
-
-
-class Organization(AuditMixin, Base):
-    __tablename__ = 'organizations'
-    name: Mapped[str]
-    description: Mapped[str | None] = mapped_column(nullable=True)
-    logo_url: Mapped[str | None] = mapped_column(nullable=True)
-    users: Mapped[list[User]] = relationship(
-        secondary="user_organizations",
-        back_populates="organizations"
-    )
-
-    organization_users: Mapped[list[UserOrganization]] = relationship(
-        back_populates="organization"
     )
