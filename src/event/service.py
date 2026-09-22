@@ -1,6 +1,9 @@
 import datetime as dt
 from uuid import UUID
 
+from fastapi import HTTPException
+from starlette.status import HTTP_404_NOT_FOUND
+
 from src.event.mapper import EventMapper
 from src.event.model import Event
 from src.event.repository import EventRepository
@@ -49,6 +52,11 @@ class EventService:
     ) -> PaginatedEventResponse:
         events = await self._repository.get_many(show_after_datetime,
                                                    show_after_id, limit)
+        if not events:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND,
+                detail="Events not found"
+            )
         return self._mapper.models_to_pagination_schema(events)
 
     async def create(self, data: EventCreate) -> EventResponse:

@@ -29,7 +29,8 @@ class EventRepository:
     async def get_many(
             self,
             show_after_datetime: dt.datetime | None,
-            show_after_id: UUID | None, limit: int
+            show_after_id: UUID | None,
+            limit: int
     ) -> Sequence[Event]:
         statement = select(
             Event

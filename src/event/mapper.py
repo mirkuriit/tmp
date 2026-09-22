@@ -23,12 +23,6 @@ class EventMapper:
 
     @staticmethod
     def models_to_pagination_schema(events: Sequence[Event]) -> PaginatedEventResponse:
-        if not events:
-            return PaginatedEventResponse(
-                items=events,
-                last_seen_id=None,
-                last_seen_datetime=None
-            )
         return PaginatedEventResponse(
             items=events,
             last_seen_id=events[-1].id,

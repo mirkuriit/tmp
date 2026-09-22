@@ -1,6 +1,9 @@
 import datetime as dt
 from uuid import UUID
 
+from fastapi import HTTPException
+from starlette.status import HTTP_404_NOT_FOUND
+
 from src.exceptions import NotFoundException
 from src.logger import logger
 from src.project.mapper import ProjectMapper
@@ -42,6 +45,11 @@ class ProjectService:
 
     async def get_many(self, show_after_datetime: dt.datetime | None, show_after_id: UUID | None, limit: int) -> PaginatedProjectResponse:
         projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
+        if not projects:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND,
+                detail="Projects not found"
+            )
         return self._mapper.models_to_pagination_schema(projects)
 
 
