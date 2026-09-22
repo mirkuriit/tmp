@@ -2,28 +2,11 @@ import datetime as dt
 from typing import Self
 from uuid import UUID
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
+from src.event_info.schema import EventInfoCreate, EventInfoResponse, EventInfoUpdate
 from src.schemas import Base, BaseUpdateValidationMixin, PaginatedResponse
-
-
-class EventInfoBase(Base):
-    organizer: str | None = None
-    head_url: str | None = Field(default=None, examples=["https://example.com/"])
-    location: str | None = None
-
-
-class EventInfoCreate(EventInfoBase):
-    pass
-
-
-class EventInfoUpdate(EventInfoBase):
-    pass
-
-
-class EventInfoResponse(EventInfoBase):
-    id: UUID
 
 
 class EventBase(Base):
