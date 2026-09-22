@@ -1,8 +1,8 @@
 """initial_users_organizations_events
 
-Revision ID: 58c68091c278
+Revision ID: 8fea9a122219
 Revises: 198c960e0c91
-Create Date: 2026-09-20 23:54:23.219805
+Create Date: 2026-09-22 11:34:47.305388
 
 """
 from collections.abc import Sequence
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '58c68091c278'
+revision: str = '8fea9a122219'
 down_revision: str | Sequence[str] | None = '198c960e0c91'
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -55,9 +55,9 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('event_info',
-    sa.Column('organizer', sa.String(), nullable=True),
-    sa.Column('head_url', sa.String(), nullable=True),
-    sa.Column('location', sa.String(), nullable=True),
+    sa.Column('organizer', sa.String(), nullable=False),
+    sa.Column('head_url', sa.String(), nullable=False),
+    sa.Column('location', sa.String(), nullable=False),
     sa.Column('event_id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=False),

@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 
 class EventInfo(AuditMixin, Base):
     __tablename__ = 'event_info'
-    organizer: Mapped[str | None] = mapped_column(nullable=True)
-    head_url: Mapped[str | None] = mapped_column(nullable=True)
-    location: Mapped[str | None] = mapped_column(nullable=True)
+    organizer: Mapped[str]
+    head_url: Mapped[str]
+    location: Mapped[str]
 
     event_id: Mapped[UUID] = mapped_column(ForeignKey("events.id"), unique=True)
     event: Mapped["Event"] = relationship(back_populates="event_info", single_parent=True)
