@@ -3,17 +3,21 @@ from uuid import UUID
 from pydantic import AnyUrl, Field, field_validator
 from pydantic_core import PydanticCustomError
 
-from src.llm_models.schema import LLMModelCreate, LLMModelResponse, LLMModelUpdate
+from src.organization.schema import (
+    OrganizationCreate,
+    OrganizationResponse,
+    OrganizationUpdate,
+)
 from src.schemas import Base, BaseUpdateValidationMixin, PaginatedResponse
 
 
-class ProjectBase(Base):
-    name: str
-    allow_experimental_functions: bool
-    description: str | None = None
+class UserBase(Base):
+    username: str
+    bio: str | None = None
     logo_url: str | None = Field(default="https://example.com/")
+    has_premium: bool
 
-    @field_validator("name", "description")
+    @field_validator("username", "bio")
     @classmethod
     def check_is_empty(cls, value: str):
         if isinstance(value, str) and value.strip() == "":
@@ -34,29 +38,20 @@ class ProjectBase(Base):
         return value
 
 
+class UserCreate(UserBase):
+    organizations: list[OrganizationCreate]
 
 
-class ProjectCreate(ProjectBase):
-    llm_models: list[LLMModelCreate]
-
-
-class ProjectResponse(ProjectBase):
+class UserResponse(UserBase):
     id: UUID
-    likes: int
-    llm_models: list[LLMModelResponse]
+    organizations: list[OrganizationResponse]
 
 
-class PaginatedProjectResponse(Base, PaginatedResponse):
-    items: list[ProjectResponse]
+class PaginatedUserResponse(Base, PaginatedResponse):
+    items: list[UserResponse]
 
 
-
-class ProjectUpdate(ProjectBase, BaseUpdateValidationMixin):
-    name: str | None = None
-    allow_experimental_functions: bool | None = None
-    llm_models: list[LLMModelUpdate] | None = None
-
-
-
-
-
+class UserUpdate(UserBase, BaseUpdateValidationMixin):
+    username: str | None
+    has_premium: bool | None
+    organizations: list[OrganizationUpdate] | None = None

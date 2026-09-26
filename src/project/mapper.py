@@ -22,12 +22,6 @@ class ProjectMapper:
 
     @staticmethod
     def models_to_pagination_schema(projects: Sequence[Project]) -> PaginatedProjectResponse:
-        if not projects:
-            return PaginatedProjectResponse(
-                items=projects,
-                last_seen_id=None,
-                last_seen_datetime=None
-            )
         return PaginatedProjectResponse(
             items=projects,
             last_seen_id=projects[-1].id,

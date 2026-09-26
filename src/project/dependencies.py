@@ -1,4 +1,5 @@
-from typing import Annotated
+from collections.abc import Callable
+from typing import Annotated, Any
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,7 @@ from src.project.repository import ProjectRepository
 from src.project.service import ProjectService
 
 
-def project_service_dependency(session_dependency):
+def project_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession], ProjectService]:
     def dependency(
         session: Annotated[AsyncSession, Depends(session_dependency)],
     ) -> ProjectService:
