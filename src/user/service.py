@@ -1,7 +1,11 @@
 import datetime as dt
+from asyncio import sleep
 from uuid import UUID
 
-from src.exceptions import NotFoundException
+from fastapi import HTTPException
+from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
+
+from src.exceptions import NotFoundException, ResourceIsLockedException
 from src.logger import logger
 from src.user.mapper import UserMapper
 from src.user.model import User
@@ -10,6 +14,9 @@ from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, Use
 
 
 class UserService:
+    RETRY_MULTIPLY_FACTOR = 1
+    RETRY_MAX_COUNT = 5
+
     def __init__(self, repository: UserRepository,
                  mapper: UserMapper) -> None:
         self._mapper = mapper
@@ -18,8 +25,10 @@ class UserService:
     async def _get_one(
             self,
             user_id: UUID,
+            *,
+            need_advisory_lock: bool = False
     ) -> User:
-        user = await self._repository.get_one_or_none(user_id)
+        user = await self._repository.get_one_or_none(user_id, need_advisory_lock=need_advisory_lock)
         if user is None:
             detail = f"User with id: {user_id} not found"
             exception = NotFoundException(detail=detail)
@@ -29,6 +38,10 @@ class UserService:
             )
             raise exception
         return user
+
+    async def get_locked_one(self, user_id: UUID) -> UserResponse:
+        user = await self._get_one(user_id)
+        return self._mapper.model_to_schema(user)
 
     async def get_one(self, user_id: UUID) -> UserResponse:
         user = await self._get_one(user_id)
@@ -46,9 +59,19 @@ class UserService:
 
     async def update(self, user_id: UUID,
                      data: UserUpdate) -> UserResponse:
-        user = await self._get_one(user_id)
-        await self._repository.update(user, data)
-        return self._mapper.model_to_schema(user)
+        for i in range(self.RETRY_MAX_COUNT):
+            try:
+                user = await self._get_one(user_id, need_advisory_lock=True)
+                await self._repository.update(user, data)
+                return self._mapper.model_to_schema(user)
+            except ResourceIsLockedException:
+                logger.info(f"Resource: user with id {user_id} is locked. Retry after {i * self.RETRY_MULTIPLY_FACTOR} seconds")
+                await sleep(i * self.RETRY_MULTIPLY_FACTOR)
+        raise HTTPException(
+            status_code=HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Internal user update error. Retry later."
+        )
+
 
     async def delete(
             self,

@@ -10,3 +10,7 @@ class NotFoundException(HTTPException):
     ):
         self.status_code = status_code
         self.detail = detail
+
+
+class ResourceIsLockedException(Exception):
+    pass
