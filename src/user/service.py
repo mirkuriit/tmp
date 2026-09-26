@@ -1,5 +1,4 @@
 import datetime as dt
-from asyncio import sleep
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -59,14 +58,12 @@ class UserService:
 
     async def update(self, user_id: UUID,
                      data: UserUpdate) -> UserResponse:
-        for i in range(self.RETRY_MAX_COUNT):
-            try:
-                user = await self._get_one(user_id, need_advisory_lock=True)
-                await self._repository.update(user, data)
-                return self._mapper.model_to_schema(user)
-            except ResourceIsLockedException:
-                logger.info(f"Resource: user with id {user_id} is locked. Retry after {i * self.RETRY_MULTIPLY_FACTOR} seconds")
-                await sleep(i * self.RETRY_MULTIPLY_FACTOR)
+        try:
+            user = await self._get_one(user_id, need_advisory_lock=True)
+            await self._repository.update(user, data)
+            return self._mapper.model_to_schema(user)
+        except ResourceIsLockedException:
+            logger.exception(f"Resource: user with id {user_id} is locked")
         raise HTTPException(
             status_code=HTTP_503_SERVICE_UNAVAILABLE,
             detail="Internal user update error. Retry later."
