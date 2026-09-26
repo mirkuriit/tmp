@@ -41,8 +41,7 @@ class UserService:
         return self._mapper.models_to_pagination_schema(users)
 
     async def create(self, data: UserCreate) -> UserResponse:
-        user = await self._repository.create(
-            self._mapper.schema_to_model(data))
+        user = await self._repository.create(data)
         return self._mapper.model_to_schema(user)
 
     async def update(self, user_id: UUID,

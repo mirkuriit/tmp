@@ -2,11 +2,13 @@ import datetime as dt
 from uuid import UUID
 
 from sqlalchemy import Sequence, and_, or_, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.organization.model import Organization
 from src.user.mapper import UserMapper
-from src.user.model import User
-from src.user.schema import UserUpdate
+from src.user.model import User, UserOrganization
+from src.user.schema import UserCreate, UserUpdate
 
 
 class UserRepository:
@@ -54,9 +56,13 @@ class UserRepository:
 
         return (await self._session.scalars(statement)).all()
 
-    async def create(self, user: User) -> User:
-        self._session.add(user)
-        await self._session.flush()
+    async def create(self, data: UserCreate) -> User:
+
+        user = await self._session.scalar(insert(User).values(**data.model_dump(exclude={"organizations"})).returning(User))
+        for organization in data.organizations:
+            organization = await self._session.scalar(insert(Organization).values(**organization.model_dump(exclude={"users"})).returning(Organization))
+            await self._session.execute(insert(UserOrganization).values(user_id=user.id, organization_id=organization.id).on_conflict_do_nothing())
+        await self._session.refresh(user)
         return user
 
     async def update(self, user: User, updated_schema: UserUpdate) -> User:
