@@ -30,7 +30,7 @@ class UserRepository:
     async def get_advisory_lock(self, key: int)-> bool:
         return not(
                 await self._session.scalar(
-                    func.pg_try_advisory_xact_lock(key)
+                    func.pg_advisory_xact_lock(key)
                 )
             )
 
