@@ -2,6 +2,7 @@ import datetime as dt
 from uuid import UUID
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from starlette.status import HTTP_409_CONFLICT
 
 from src.exceptions import NotFoundException, ResourceIsLockedException
@@ -72,12 +73,17 @@ class UserService:
             user = await self._get_one(user_id, need_advisory_lock=True)
             await self._repository.update(user, data)
             return self._mapper.model_to_schema(user)
-        except ResourceIsLockedException:
+        except ResourceIsLockedException as ex:
             logger.exception(f"Resource: user with id {user_id} is locked")
-        raise HTTPException(
-            status_code=HTTP_409_CONFLICT,
-            detail="Internal user update error. Retry later."
-        )
+            raise HTTPException(
+                status_code=HTTP_409_CONFLICT,
+                detail="Internal user update error. Retry later."
+            ) from ex
+        except IntegrityError as ex:
+            raise HTTPException(
+                status_code=HTTP_409_CONFLICT,
+                detail=f"{ex}",
+            ) from ex
 
 
     async def delete(
