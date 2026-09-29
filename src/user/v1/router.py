@@ -6,6 +6,10 @@ from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
+from src.organization.dependencies import (
+   get_organization_service,
+)
+from src.organization.service import OrganizationService
 from src.user.dependencies import get_read_user_service, get_user_service
 from src.user.schema import (
    PaginatedUserResponse,
@@ -21,9 +25,15 @@ router = APIRouter(prefix="/user/v1", tags=["User V1"])
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_user(
         data: UserCreate,
-        user_service: Annotated[UserService, Depends(get_user_service)]
+        user_service: Annotated[UserService, Depends(get_user_service)],
+        organization_service: Annotated[OrganizationService, Depends(get_organization_service)]
 ) -> UserResponse:
-   return await user_service.create(data)
+   user = await user_service.create(data)
+   if data.organizations:
+      organizations = await organization_service.create_many(data.organizations)
+      organizations_ids = [organization.id for organization in organizations]
+      user = await user_service.connect_organizations_to_user(user.id, organizations_ids)
+   return user
 
 
 @router.get("/")
@@ -47,20 +57,31 @@ async def get_user(
 
 @router.patch("/{user_id}")
 async def update_user(
+        user_service: Annotated[UserService, Depends(get_user_service)],
+        organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
         user_id: UUID,
         data: UserUpdate,
-        user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> UserResponse:
-   return await user_service.update(user_id, data)
+   user = await user_service.get_one(user_id)
+   if data.organizations:
+      await organization_service.update_many(
+         [organization.id for organization in user.organizations],
+         data.organizations
+      )
+   updated_user = await user_service.update(user_id, data)
+   return updated_user
 
 
 @router.delete("/{user_id}", status_code=HTTP_204_NO_CONTENT)
 async def delete_user(
         user_service: Annotated[UserService, Depends(get_user_service)],
+        organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
         user_id: UUID,
         organization_id: UUID | None = None,
-):
-   await user_service.delete(user_id, organization_id)
+)-> None:
+   await user_service.delete(user_id)
+   if organization_id:
+      await organization_service.delete(organization_id)
 
 
 

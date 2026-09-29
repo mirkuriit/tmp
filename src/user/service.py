@@ -2,24 +2,34 @@ import datetime as dt
 from uuid import UUID
 
 from fastapi import HTTPException
-from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
+from starlette.status import HTTP_409_CONFLICT
 
 from src.exceptions import NotFoundException, ResourceIsLockedException
 from src.logger import logger
 from src.user.mapper import UserMapper
-from src.user.model import User
+from src.user.model import User, UserOrganization
 from src.user.repository import UserRepository
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
 
 
 class UserService:
-    RETRY_MULTIPLY_FACTOR = 1
-    RETRY_MAX_COUNT = 5
-
     def __init__(self, repository: UserRepository,
                  mapper: UserMapper) -> None:
         self._mapper = mapper
         self._repository = repository
+
+    async def connect_organizations_to_user(
+            self,
+            user_id,
+            organization_ids: list[UUID]
+    ) -> UserResponse:
+        for organization_id in organization_ids:
+            await self._repository.connect_organization_to_user(
+                UserOrganization(user_id=user_id, organization_id=organization_id)
+            )
+        user = await self.get_one(user_id)
+        return user
+
 
     async def _get_one(
             self,
@@ -53,7 +63,7 @@ class UserService:
         return self._mapper.models_to_pagination_schema(users)
 
     async def create(self, data: UserCreate) -> UserResponse:
-        user = await self._repository.create(data)
+        user = await self._repository.create(self._mapper.schema_to_model(data))
         return self._mapper.model_to_schema(user)
 
     async def update(self, user_id: UUID,
@@ -65,7 +75,7 @@ class UserService:
         except ResourceIsLockedException:
             logger.exception(f"Resource: user with id {user_id} is locked")
         raise HTTPException(
-            status_code=HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=HTTP_409_CONFLICT,
             detail="Internal user update error. Retry later."
         )
 
@@ -73,8 +83,7 @@ class UserService:
     async def delete(
             self,
             user_id: UUID,
-            organization_id: UUID | None = None
     ) -> UserResponse:
         user = await self._get_one(user_id)
-        deleted_user = await self._repository.delete(user, organization_id)
+        deleted_user = await self._repository.delete(user)
         return self._mapper.model_to_schema(deleted_user)

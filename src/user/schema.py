@@ -39,7 +39,7 @@ class UserBase(Base):
 
 
 class UserCreate(UserBase):
-    organizations: list[OrganizationCreate]
+    organizations: list[OrganizationCreate] | None = None
 
 
 class UserResponse(UserBase):
@@ -52,6 +52,6 @@ class PaginatedUserResponse(Base, PaginatedResponse):
 
 
 class UserUpdate(UserBase, BaseUpdateValidationMixin):
-    username: str | None
-    has_premium: bool | None
+    username: str | None = None
+    has_premium: bool | None = None
     organizations: list[OrganizationUpdate] | None = None

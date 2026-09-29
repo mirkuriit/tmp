@@ -23,7 +23,7 @@ class UserOrganization(AuditMixin, Base):
 
 class User(AuditMixin, Base):
     __tablename__ = 'users'
-    username: Mapped[str]
+    username: Mapped[str] = mapped_column(unique=True)
     bio: Mapped[str | None] = mapped_column(String(140), nullable=True)
     has_premium: Mapped[bool] = mapped_column(default=False)
     logo_url: Mapped[str | None] = mapped_column(nullable=True)

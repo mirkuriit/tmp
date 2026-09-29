@@ -1,15 +1,18 @@
+from typing import Any
+
+import sqlalchemy as sa
 from sqlalchemy import Sequence
 
-from src.organization.model import Organization
 from src.user.model import User
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
 
 
 class UserMapper:
+    DEFAULT_FIELDS = frozenset({"created_at", "updated_at", "is_deleted", "id"})
+
     @staticmethod
     def schema_to_model(data: UserCreate) -> User:
-        organizations = [Organization(**model.model_dump()) for model in data.organizations]
-        return User(**data.model_dump(exclude={"organizations"}), organizations=organizations)
+        return User(**data.model_dump(exclude={"organizations"}))
 
     @staticmethod
     def model_to_schema(data: User) -> UserResponse:
@@ -29,19 +32,14 @@ class UserMapper:
             last_seen_datetime=users[-1].created_at
         )
 
+    @classmethod
+    def model_to_dict(cls, data: User) -> dict[str, Any]:
+        return {attr.key: getattr(data, attr.key) for attr in sa.inspect(data).mapper.column_attrs if attr.key not in cls.DEFAULT_FIELDS}
+
 
     @staticmethod
     def update_model_from_schema(data: User, updated_data: UserUpdate) -> User:
         for field, value in updated_data.model_dump(exclude_unset=True, exclude={"organizations"}).items():
             setattr(data, field, value)
-
-        if "organizations" in updated_data.model_fields_set and updated_data.organizations:
-            models_by_id = {model.id: model for model in data.organizations}
-            for updated_model in updated_data.organizations:
-                model = models_by_id.get(updated_model.id)
-                if model is None:
-                    continue
-                for field, value in updated_model.model_dump(exclude_unset=True, exclude={"id"}).items():
-                    setattr(model, field, value)
 
         return data
