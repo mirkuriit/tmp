@@ -2,9 +2,10 @@ import datetime as dt
 from uuid import UUID
 
 from fastapi import HTTPException
+from sqlalchemy import ColumnElement
 from starlette.status import HTTP_409_CONFLICT
 
-from src.exceptions import NotFoundException, ResourceIsLockedException
+from src.exceptions import NotFoundException
 from src.logger import logger
 from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
@@ -32,10 +33,9 @@ class UserService:
             self,
             user_id: UUID,
             *,
-            need_advisory_lock: bool = False,
-            lock_key: str | None = None
+            filters: list[ColumnElement[bool]] | None = None
     ) -> User:
-        user = await self._repository.get_one_or_none(user_id, need_advisory_lock=need_advisory_lock, lock_key=lock_key)
+        user = await self._repository.get_one_or_none(user_id, filters=filters)
         if user is None:
             detail = f"User with id: {user_id} not found"
             exception = NotFoundException(detail=detail)
@@ -77,21 +77,22 @@ class UserService:
 
     async def update(self, user_id: UUID,
                      data: UserUpdate) -> UserResponse:
-
-        try:
-            user = await self._get_one(user_id, need_advisory_lock=True, lock_key=data.username)
-            await self._repository.update(user, data)
-            if data.organizations:
-                await self._organization_service.update_many(
-                    user.organizations, data.organizations
+        if data.username:
+            await self._repository.get_advisory_lock(data.username)
+            checked_user = await self._repository.get_many(limit=1, filters=[User.username == data.username])
+            if checked_user:
+                raise HTTPException(
+                    detail="User with same username exists",
+                    status_code=HTTP_409_CONFLICT
                 )
-            return self._mapper.model_to_schema(user)
-        except ResourceIsLockedException as ex:
-            logger.exception(f"Resource: user with id {user_id} is locked")
-            raise HTTPException(
-                status_code=HTTP_409_CONFLICT,
-                detail="Internal user update error. Retry later."
-            ) from ex
+
+        user = await self._get_one(user_id)
+        await self._repository.update(user, data)
+        if data.organizations:
+            await self._organization_service.update_many(
+                user.organizations, data.organizations
+            )
+        return self._mapper.model_to_schema(user)
 
     async def delete(
             self,

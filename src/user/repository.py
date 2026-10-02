@@ -1,13 +1,14 @@
 import datetime as dt
 from uuid import UUID
 
-from sqlalchemy import Sequence, and_, func, or_, select
+from sqlalchemy import ColumnElement, Sequence, and_, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user.schema import UserUpdate
+from src.utils import string_hash
 
 
 class UserRepository:
@@ -19,27 +20,32 @@ class UserRepository:
         await self._session.refresh(user)
 
 
+    async def get_advisory_lock(self, lock_key: str) -> None:
+        await self._session.scalar(
+            func.pg_advisory_xact_lock(string_hash(lock_key)))
+
+
     async def get_one_or_none(
             self,
             user_id: UUID,
             *,
-            need_advisory_lock: bool = False,
-            lock_key: str | None = None,
             is_deleted: bool = False,
     ) -> User | None:
-        filters = [
+        base_filters = [
             User.id == user_id,
             User.is_deleted == is_deleted
         ]
-        if need_advisory_lock and lock_key:
-            await self._session.scalar(func.pg_advisory_xact_lock(lock_key))
-        return await self._session.scalar(select(User).where(*filters))
+
+        return await self._session.scalar(select(User).where(*base_filters))
 
 
     async def get_many(
             self,
-            show_after_datetime: dt.datetime | None,
-            show_after_id: UUID | None, limit: int
+            limit: int,
+            show_after_datetime: dt.datetime | None = None,
+            show_after_id: UUID | None = None,
+            *,
+            filters: list[ColumnElement[bool]] | None = None
     ) -> Sequence[User]:
         statement = select(
             User
@@ -61,7 +67,10 @@ class UserRepository:
                     )
                 )
             )
-
+        if filters:
+            statement = statement.where(
+                *filters
+            )
         return (await self._session.scalars(statement)).all()
 
     async def create(self, data: User) -> User | None:
