@@ -1,12 +1,7 @@
 from uuid import UUID
 
-from sqlalchemy.exc import IntegrityError
-from starlette.status import HTTP_409_CONFLICT
-from fastapi import HTTPException
-
 from src.exceptions import NotFoundException
 from src.logger import logger
-from src.organization.schema import OrganizationCreate, OrganizationResponse
 from src.user.schema import UserCreate
 from src.user_organizations.mapper import UserOrganizationMapper
 from src.user_organizations.model import UserOrganization

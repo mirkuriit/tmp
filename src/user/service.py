@@ -2,19 +2,15 @@ import datetime as dt
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy.exc import IntegrityError
 from starlette.status import HTTP_409_CONFLICT
 
 from src.exceptions import NotFoundException, ResourceIsLockedException
 from src.logger import logger
-from src.organization.repository import OrganizationRepository
 from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
 from src.user.model import User
-from src.user_organizations.model import UserOrganization
 from src.user.repository import UserRepository
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
-from src.user_organizations.repository import UserOrganizationRepository
 from src.user_organizations.service import UserOrganizationService
 
 
@@ -71,7 +67,7 @@ class UserService:
             )
         if data.organizations:
             organizations = await self._organization_service.create_many(data.organizations)
-            user_organizations = await self._user_organization_service.create_many(
+            await self._user_organization_service.create_many(
                 user_id=user.id,
                 organizations=organizations,
             )
@@ -106,4 +102,4 @@ class UserService:
             await self._organization_service.delete(organization_id)
         elif user_id:
             user = await self._get_one(user_id)
-            deleted_user = await self._repository.delete(user)
+            await self._repository.delete(user)

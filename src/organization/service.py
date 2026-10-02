@@ -65,7 +65,7 @@ class OrganizationService:
         updated_organizations = []
         uuid_to_update_organization = {organization.id: organization for organization in updated_data}
         for organization in data:
-            if organization.id in uuid_to_update_organization.keys():
+            if organization.id in uuid_to_update_organization:
                 updated_organization = await self.update(organization.id, uuid_to_update_organization[organization.id])
                 updated_organizations.append(updated_organization)
 

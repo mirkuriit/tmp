@@ -1,6 +1,5 @@
 from uuid import UUID
 
-from src.organization.schema import OrganizationCreate
 from src.user_organizations.model import UserOrganization
 from src.user_organizations.schema import (
     UserOrganizationCreate,

@@ -1,18 +1,13 @@
 import datetime as dt
 from uuid import UUID
 
-from fastapi import HTTPException
 from sqlalchemy import Sequence, and_, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_409_CONFLICT
 
-from src.exceptions import ResourceIsLockedException, ResourceExistsException
 from src.user.mapper import UserMapper
 from src.user.model import User
-from src.user_organizations.model import UserOrganization
 from src.user.schema import UserUpdate
-from src.utils import string_hash
 
 
 class UserRepository:
