@@ -9,7 +9,8 @@ from starlette.status import HTTP_409_CONFLICT
 
 from src.exceptions import ResourceIsLockedException
 from src.user.mapper import UserMapper
-from src.user.model import User, UserOrganization
+from src.user.model import User
+from src.user_organizations.model import UserOrganization
 from src.user.schema import UserUpdate
 from src.utils import string_hash
 
@@ -86,19 +87,15 @@ class UserRepository:
     async def create(self, data: User) -> User:
         user = await self._session.scalar(
             insert(User).values(
-                **UserMapper.model_to_dict(data)
+                username=data.username,
+                bio=data.bio,
+                logo_url=data.logo_url,
+                has_premium=data.has_premium
             ).on_conflict_do_nothing().returning(User)
         )
 
-        from src.logger import logger
-        logger.info(f"Info: {user}")
-        if user:
+        if not user:
             await self._session.refresh(user)
-        else:
-            raise HTTPException(
-                status_code=HTTP_409_CONFLICT,
-                detail="User with same username already exists"
-            )
         return user
 
     async def update(self, user: User, updated_schema: UserUpdate) -> User:

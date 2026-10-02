@@ -8,7 +8,8 @@ from starlette.status import HTTP_409_CONFLICT
 from src.exceptions import NotFoundException, ResourceIsLockedException
 from src.logger import logger
 from src.user.mapper import UserMapper
-from src.user.model import User, UserOrganization
+from src.user.model import User
+from src.user_organizations.model import UserOrganization
 from src.user.repository import UserRepository
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
 
