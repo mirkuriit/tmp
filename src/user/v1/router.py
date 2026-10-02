@@ -6,10 +6,6 @@ from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
-from src.organization.dependencies import (
-   get_organization_service,
-)
-from src.organization.service import OrganizationService
 from src.user.dependencies import get_read_user_service, get_user_service
 from src.user.schema import (
    PaginatedUserResponse,
@@ -53,12 +49,10 @@ async def get_user(
 @router.patch("/{user_id}")
 async def update_user(
         user_service: Annotated[UserService, Depends(get_user_service)],
-        organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
         user_id: UUID,
         data: UserUpdate,
 ) -> UserResponse:
-   updated_user = await user_service.update(user_id, data)
-   return updated_user
+   return await user_service.update(user_id, data)
 
 
 @router.delete("/{user_id}", status_code=HTTP_204_NO_CONTENT)
