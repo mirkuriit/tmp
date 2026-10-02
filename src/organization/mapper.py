@@ -10,12 +10,20 @@ from src.organization.schema import (
 class OrganizationMapper:
     @staticmethod
     def schema_to_model(data: OrganizationCreate) -> Organization:
-
         return Organization(**data.model_dump())
+
+    @classmethod
+    def schema_to_model_list(cls, data: list[OrganizationCreate]) -> list[Organization]:
+        return [cls.schema_to_model(organization) for organization in data]
 
     @staticmethod
     def model_to_schema(data: Organization) -> OrganizationResponse:
         return OrganizationResponse.model_validate(data)
+
+
+    @classmethod
+    def model_to_schema_list(cls, data: list[Organization]) -> list[OrganizationResponse]:
+        return [cls.model_to_schema(organization) for organization in data]
 
 
     @staticmethod

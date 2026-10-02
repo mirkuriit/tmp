@@ -5,7 +5,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.models import AuditMixin, Base
 
 if TYPE_CHECKING:
-    from src.user.model import User, UserOrganization
+    from src.user.model import User
+    from src.user_organizations.model import UserOrganization
 
 class Organization(AuditMixin, Base):
     __tablename__ = 'organizations'

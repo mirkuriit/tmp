@@ -44,12 +44,13 @@ class OrganizationService:
 
 
     async def create(self, data: OrganizationCreate) -> OrganizationResponse:
-        organization = await self._repository.create(OrganizationMapper.schema_to_model(data))
+        organization = await self._repository.create(self._mapper.schema_to_model(data))
         return self._mapper.model_to_schema(organization)
 
+
     async def create_many(self, data: list[OrganizationCreate])-> list[OrganizationResponse]:
-        organizations = await self._repository.create_many([OrganizationMapper.schema_to_model(organization) for organization in data])
-        return [OrganizationMapper.model_to_schema(organization) for organization in organizations]
+        organizations = await self._repository.create_many(self._mapper.schema_to_model_list(data))
+        return self._mapper.model_to_schema_list(organizations)
 
 
     async def update(self, organization_id: UUID,
@@ -64,7 +65,7 @@ class OrganizationService:
             for organization_update_schema in data:
                 if organization_id == organization_update_schema.id:
                     updated_organizations.append(await self.update(organization_id, organization_update_schema))
-        return [self._mapper.model_to_schema(organization) for organization in updated_organizations]
+        return self._mapper.model_to_schema_list(updated_organizations)
 
 
     async def delete(
