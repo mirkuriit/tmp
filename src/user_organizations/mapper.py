@@ -1,3 +1,6 @@
+from uuid import UUID
+
+from src.organization.schema import OrganizationCreate
 from src.user_organizations.model import UserOrganization
 from src.user_organizations.schema import (
     UserOrganizationCreate,
@@ -13,6 +16,10 @@ class UserOrganizationMapper:
     @classmethod
     def schema_to_model_list(cls, data: list[UserOrganizationCreate]) -> list[UserOrganization]:
         return [cls.schema_to_model(user_organization) for user_organization in data]
+
+    @classmethod
+    def data_to_model_list(cls, user_id: UUID, organizations: list[UserOrganizationResponse]) -> list[UserOrganization]:
+        return [UserOrganization(user_id=user_id, organization_id=organization.id) for organization in organizations]
 
     @staticmethod
     def model_to_schema(data: UserOrganization) -> UserOrganizationResponse:

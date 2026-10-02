@@ -26,13 +26,8 @@ router = APIRouter(prefix="/user/v1", tags=["User V1"])
 async def create_user(
         data: UserCreate,
         user_service: Annotated[UserService, Depends(get_user_service)],
-        organization_service: Annotated[OrganizationService, Depends(get_organization_service)]
 ) -> UserResponse:
    user = await user_service.create(data)
-   if data.organizations:
-      organizations = await organization_service.create_many(data.organizations)
-      organizations_ids = [organization.id for organization in organizations]
-      user = await user_service.connect_organizations_to_user(user.id, organizations_ids)
    return user
 
 

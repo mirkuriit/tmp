@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_409_CONFLICT
 
-from src.exceptions import ResourceIsLockedException
+from src.exceptions import ResourceIsLockedException, ResourceExistsException
 from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user_organizations.model import UserOrganization
@@ -20,20 +20,8 @@ class UserRepository:
         self._session = db_session
 
 
-    async def connect_organization_to_user(
-            self,
-            data: UserOrganization
-    ) -> UserOrganization:
-        self._session.add(data)
-        await self._session.flush()
-        return data
-
-    async def get_advisory_lock(self, key: int)-> bool:
-        return not(
-                await self._session.scalar(
-                    func.pg_advisory_xact_lock(key)
-                )
-            )
+    async def refresh(self, user: User) -> None:
+        await self._session.refresh(user)
 
 
     async def get_one_or_none(
@@ -41,18 +29,15 @@ class UserRepository:
             user_id: UUID,
             *,
             need_advisory_lock: bool = False,
+            lock_key: str | None = None,
             is_deleted: bool = False,
     ) -> User | None:
         filters = [
             User.id == user_id,
             User.is_deleted == is_deleted
         ]
-        if need_advisory_lock:
-            is_blocked = await self.get_advisory_lock(
-                string_hash(f"{User.__tablename__}:{User.username}")
-            )
-            if is_blocked:
-                raise ResourceIsLockedException
+        if need_advisory_lock and lock_key:
+            await self._session.scalar(func.pg_advisory_xact_lock(lock_key))
         return await self._session.scalar(select(User).where(*filters))
 
 
@@ -84,19 +69,22 @@ class UserRepository:
 
         return (await self._session.scalars(statement)).all()
 
-    async def create(self, data: User) -> User:
+    async def create(self, data: User) -> User | None:
         user = await self._session.scalar(
             insert(User).values(
                 username=data.username,
                 bio=data.bio,
                 logo_url=data.logo_url,
                 has_premium=data.has_premium
-            ).on_conflict_do_nothing().returning(User)
+            ).on_conflict_do_nothing(
+                index_elements=[User.username]
+            ).returning(User)
         )
 
-        if not user:
+        if user:
             await self._session.refresh(user)
         return user
+
 
     async def update(self, user: User, updated_schema: UserUpdate) -> User:
         user = UserMapper.update_model_from_schema(user, updated_schema)
