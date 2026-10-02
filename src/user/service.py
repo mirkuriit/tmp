@@ -1,10 +1,7 @@
 import datetime as dt
 from uuid import UUID
 
-from fastapi import HTTPException
-from starlette.status import HTTP_409_CONFLICT
-
-from src.exceptions import NotFoundException
+from src.exceptions import NotFoundException, ResourceExistsException
 from src.logger import logger
 from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
@@ -61,8 +58,7 @@ class UserService:
             self._mapper.schema_to_model(data)
         )
         if not user:
-            raise HTTPException(
-                status_code=HTTP_409_CONFLICT,
+            raise ResourceExistsException(
                 detail="Same user already exists"
             )
         if data.organizations:
@@ -81,9 +77,8 @@ class UserService:
             await self._repository.get_advisory_lock(f"{User.__tablename__}:{data.username}")
             checked_user = await self._repository.get_many(limit=1, filters=[User.username == data.username, User.id != user_id])
             if checked_user:
-                raise HTTPException(
+                raise ResourceExistsException(
                     detail="User with same username exists",
-                    status_code=HTTP_409_CONFLICT
                 )
 
         user = await self._get_one(user_id)
