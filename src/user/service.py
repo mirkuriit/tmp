@@ -78,6 +78,7 @@ class UserService:
         await self._repository.refresh(user)
         return self._mapper.model_to_schema(user)
 
+
     async def update(self, user_id: UUID,
                      data: UserUpdate) -> UserResponse:
         try:
@@ -96,3 +97,14 @@ class UserService:
                 detail=f"{ex}",
             ) from ex
 
+
+    async def delete(
+            self,
+            user_id: UUID,
+            organization_id: UUID | None = None,
+    ) -> None:
+        if user_id and organization_id:
+            await self._organization_service.delete(organization_id)
+        elif user_id:
+            user = await self._get_one(user_id)
+            deleted_user = await self._repository.delete(user)

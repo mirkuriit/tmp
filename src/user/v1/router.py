@@ -70,13 +70,10 @@ async def update_user(
 @router.delete("/{user_id}", status_code=HTTP_204_NO_CONTENT)
 async def delete_user(
         user_service: Annotated[UserService, Depends(get_user_service)],
-        organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
         user_id: UUID,
         organization_id: UUID | None = None,
 )-> None:
-   await user_service.delete(user_id)
-   if organization_id:
-      await organization_service.delete(organization_id)
+   await user_service.delete(user_id, organization_id)
 
 
 

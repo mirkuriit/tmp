@@ -59,6 +59,7 @@ class OrganizationService:
         organization = await self._repository.update(organization, data)
         return self._mapper.model_to_schema(organization)
 
+
     async def update_many(self, organization_ids: list[UUID], data: list[OrganizationUpdate]) -> list[OrganizationResponse]:
         updated_organizations = []
         for organization_id in organization_ids:
@@ -75,3 +76,11 @@ class OrganizationService:
         organization = await self._get_one(organization_id)
         deleted_organization = await self._repository.delete(organization)
         return self._mapper.model_to_schema(deleted_organization)
+
+
+    async def delete_many(
+            self,
+            organization_ids: list[UUID]
+    ) -> None:
+        for organization_id in organization_ids:
+            await self.delete(organization_id)
