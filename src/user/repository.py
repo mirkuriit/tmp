@@ -1,7 +1,8 @@
 import datetime as dt
+from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, Sequence, and_, func, or_, select
+from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -74,7 +75,7 @@ class UserRepository:
         return (await self._session.scalars(statement)).all()
 
     async def create(self, data: User) -> User | None:
-        user = await self._session.scalar(
+        return await self._session.scalar(
             insert(User).values(
                 username=data.username,
                 bio=data.bio,
@@ -84,10 +85,6 @@ class UserRepository:
                 index_elements=[User.username]
             ).returning(User)
         )
-
-        if user:
-            await self._session.refresh(user)
-        return user
 
 
     async def update(self, user: User, updated_schema: UserUpdate) -> User:

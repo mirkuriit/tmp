@@ -2,7 +2,6 @@ import datetime as dt
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import ColumnElement
 from starlette.status import HTTP_409_CONFLICT
 
 from src.exceptions import NotFoundException
@@ -32,10 +31,8 @@ class UserService:
     async def _get_one(
             self,
             user_id: UUID,
-            *,
-            filters: list[ColumnElement[bool]] | None = None
     ) -> User:
-        user = await self._repository.get_one_or_none(user_id, filters=filters)
+        user = await self._repository.get_one_or_none(user_id)
         if user is None:
             detail = f"User with id: {user_id} not found"
             exception = NotFoundException(detail=detail)
@@ -52,8 +49,11 @@ class UserService:
 
     async def get_many(self, show_after_datetime: dt.datetime | None,
                        show_after_id: UUID | None, limit: int) -> PaginatedUserResponse:
-        users = await self._repository.get_many(show_after_datetime,
-                                                   show_after_id, limit)
+        users = await self._repository.get_many(
+            limit=limit,
+            show_after_datetime=show_after_datetime,
+            show_after_id=show_after_id, 
+        )
         return self._mapper.models_to_pagination_schema(users)
 
     async def create(self, data: UserCreate) -> UserResponse:
@@ -78,8 +78,8 @@ class UserService:
     async def update(self, user_id: UUID,
                      data: UserUpdate) -> UserResponse:
         if data.username:
-            await self._repository.get_advisory_lock(data.username)
-            checked_user = await self._repository.get_many(limit=1, filters=[User.username == data.username])
+            await self._repository.get_advisory_lock(f"{User.__tablename__}:{data.username}")
+            checked_user = await self._repository.get_many(limit=1, filters=[User.username == data.username, User.id != user_id])
             if checked_user:
                 raise HTTPException(
                     detail="User with same username exists",
@@ -101,6 +101,7 @@ class UserService:
     ) -> None:
         if user_id and organization_id:
             await self._organization_service.delete(organization_id)
+            await self._user_organization_service.delete(user_id, organization_id)
         elif user_id:
             user = await self._get_one(user_id)
             await self._repository.delete(user)

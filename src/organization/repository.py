@@ -1,8 +1,8 @@
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql.schema import Sequence
 
 from src.organization.mapper import OrganizationMapper
 from src.organization.model import Organization

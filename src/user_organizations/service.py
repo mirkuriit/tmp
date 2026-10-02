@@ -2,7 +2,6 @@ from uuid import UUID
 
 from src.exceptions import NotFoundException
 from src.logger import logger
-from src.user.schema import UserCreate
 from src.user_organizations.mapper import UserOrganizationMapper
 from src.user_organizations.model import UserOrganization
 from src.user_organizations.repository import UserOrganizationRepository
@@ -44,12 +43,6 @@ class UserOrganizationService:
     async def create_many(self, user_id: UUID, organizations: list[UserOrganizationResponse]) -> list[UserOrganizationResponse]:
         user_organizations = await self._repository.create_many(
             self._mapper.data_to_model_list(user_id, organizations)
-        )
-        return self._mapper.model_to_schema_list(user_organizations)
-
-    async def create_many_from_user(self, data: UserCreate) -> list[UserOrganizationResponse]:
-        user_organizations = await self._repository.create_many(
-            self._mapper.schema_to_model_list(data)
         )
         return self._mapper.model_to_schema_list(user_organizations)
 
