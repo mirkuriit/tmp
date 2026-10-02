@@ -11,6 +11,7 @@ from src.organization.schema import (
     OrganizationUpdate,
 )
 
+type UUIDOrganizationDict = dict[UUID, OrganizationResponse]
 
 class OrganizationService:
     def __init__(self, repository: OrganizationRepository,
@@ -60,12 +61,14 @@ class OrganizationService:
         return self._mapper.model_to_schema(organization)
 
 
-    async def update_many(self, organization_ids: list[UUID], data: list[OrganizationUpdate]) -> list[OrganizationResponse]:
+    async def update_many(self, data: list[Organization], updated_data: list[OrganizationUpdate]) -> list[OrganizationResponse]:
         updated_organizations = []
-        for organization_id in organization_ids:
-            for organization_update_schema in data:
-                if organization_id == organization_update_schema.id:
-                    updated_organizations.append(await self.update(organization_id, organization_update_schema))
+        uuid_to_update_organization = {organization.id: organization for organization in updated_data}
+        for organization in data:
+            if organization.id in uuid_to_update_organization.keys():
+                updated_organization = await self.update(organization.id, uuid_to_update_organization[organization.id])
+                updated_organizations.append(updated_organization)
+
         return self._mapper.model_to_schema_list(updated_organizations)
 
 

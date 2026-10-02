@@ -81,9 +81,14 @@ class UserService:
 
     async def update(self, user_id: UUID,
                      data: UserUpdate) -> UserResponse:
+
         try:
             user = await self._get_one(user_id, need_advisory_lock=True, lock_key=data.username)
             await self._repository.update(user, data)
+            if data.organizations:
+                await self._organization_service.update_many(
+                    user.organizations, data.organizations
+                )
             return self._mapper.model_to_schema(user)
         except ResourceIsLockedException as ex:
             logger.exception(f"Resource: user with id {user_id} is locked")
@@ -91,12 +96,6 @@ class UserService:
                 status_code=HTTP_409_CONFLICT,
                 detail="Internal user update error. Retry later."
             ) from ex
-        except IntegrityError as ex:
-            raise HTTPException(
-                status_code=HTTP_409_CONFLICT,
-                detail=f"{ex}",
-            ) from ex
-
 
     async def delete(
             self,

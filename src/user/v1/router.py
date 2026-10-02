@@ -57,12 +57,6 @@ async def update_user(
         user_id: UUID,
         data: UserUpdate,
 ) -> UserResponse:
-   user = await user_service.get_one(user_id)
-   if data.organizations:
-      await organization_service.update_many(
-         [organization.id for organization in user.organizations],
-         data.organizations
-      )
    updated_user = await user_service.update(user_id, data)
    return updated_user
 
