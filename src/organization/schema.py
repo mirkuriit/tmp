@@ -3,15 +3,14 @@ from uuid import UUID
 from pydantic import AnyUrl, Field, field_validator
 from pydantic_core import PydanticCustomError
 
-from src.llm_models.schema import LLMModelCreate, LLMModelResponse, LLMModelUpdate
-from src.schemas import Base, BaseUpdateValidationMixin, PaginatedResponse
+from src.schemas import Base
 
 
-class ProjectBase(Base):
+class OrganizationBase(Base):
     name: str
-    allow_experimental_functions: bool
     description: str | None = None
-    logo_url: str | None = Field(default="https://example.com/")
+    logo_url: str = Field(default="https://example.com/")
+
 
     @field_validator("name", "description")
     @classmethod
@@ -34,29 +33,14 @@ class ProjectBase(Base):
         return value
 
 
+class OrganizationCreate(OrganizationBase):
+    pass
 
 
-class ProjectCreate(ProjectBase):
-    llm_models: list[LLMModelCreate]
-
-
-class ProjectResponse(ProjectBase):
+class OrganizationUpdate(OrganizationBase):
     id: UUID
-    likes: int
-    llm_models: list[LLMModelResponse]
-
-
-class PaginatedProjectResponse(Base, PaginatedResponse):
-    items: list[ProjectResponse]
-
-
-
-class ProjectUpdate(ProjectBase, BaseUpdateValidationMixin):
     name: str | None = None
-    allow_experimental_functions: bool | None = None
-    llm_models: list[LLMModelUpdate] | None = None
 
 
-
-
-
+class OrganizationResponse(OrganizationBase):
+    id: UUID
