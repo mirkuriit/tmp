@@ -39,7 +39,7 @@ class UserBase(Base):
 
 
 class UserCreate(UserBase):
-    organizations: list[OrganizationCreate] | None = None
+    organizations: list[OrganizationCreate]
 
 
 class UserResponse(UserBase):
