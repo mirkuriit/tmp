@@ -25,20 +25,18 @@ class UserOrganizationRepository:
         )
         return await self._session.scalar(statement)
 
+
     async def create(self, user_organization: UserOrganization) -> UserOrganization:
         self._session.add(user_organization)
         await self._session.flush()
         return user_organization
+
 
     async def create_many(self, user_organizations: list[UserOrganization]) -> list[UserOrganization]:
         self._session.add_all(user_organizations)
         await self._session.flush()
         return user_organizations
 
-    async def delete(self, user_organization: UserOrganization) -> UserOrganization:
-        user_organization.is_deleted = True
-        await self._session.flush()
-        return user_organization
 
     async def delete_many(self, user_organizations: list[UserOrganization]) -> list[UserOrganization]:
         for user_organization in user_organizations:

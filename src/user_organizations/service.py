@@ -32,6 +32,7 @@ class UserOrganizationService:
             raise exception
         return user_organization
 
+
     async def get_one(self, user_id: UUID, organization_id: UUID) -> UserOrganizationResponse:
         user_organization = await self._get_one(user_id, organization_id)
         return self._mapper.model_to_schema(user_organization)
@@ -40,16 +41,13 @@ class UserOrganizationService:
         user_organization = await self._repository.create(self._mapper.schema_to_model(data))
         return self._mapper.model_to_schema(user_organization)
 
+
     async def create_many(self, user_id: UUID, organizations: list[UserOrganizationResponse]) -> list[UserOrganizationResponse]:
         user_organizations = await self._repository.create_many(
             self._mapper.data_to_model_list(user_id, organizations)
         )
         return self._mapper.model_to_schema_list(user_organizations)
 
-    async def delete(self, user_id: UUID, organization_id: UUID) -> UserOrganizationResponse:
-        user_organization = await self._get_one(user_id, organization_id)
-        deleted = await self._repository.delete(user_organization)
-        return self._mapper.model_to_schema(deleted)
 
     async def delete_many(self, user_id: UUID, organization_ids: list[UUID]) -> list[UserOrganizationResponse]:
         user_organizations = [await self._get_one(user_id, organization_id) for organization_id in organization_ids]

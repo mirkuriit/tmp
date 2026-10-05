@@ -47,10 +47,6 @@ class OrganizationRepository:
         await self._session.flush()
         return organizations
 
-    async def update(self, organization: Organization, updated_schema: OrganizationUpdate) -> Organization:
-        organization = OrganizationMapper.update_model_from_schema(organization, updated_schema)
-        await self._session.flush()
-        return organization
 
     async def update_many(self, organization_to_updated_schema: dict[Organization, OrganizationUpdate]) -> list[Organization]:
         organizations = [
@@ -63,13 +59,6 @@ class OrganizationRepository:
         await self._session.flush()
         return organizations
 
-    async def delete(
-            self,
-            organization: Organization,
-    ) -> Organization:
-        organization.is_deleted = True
-        await self._session.flush()
-        return organization
 
     async def delete_many(
             self,

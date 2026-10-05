@@ -54,13 +54,6 @@ class OrganizationService:
         return self._mapper.model_to_schema_list(organizations)
 
 
-    async def update(self, organization_id: UUID,
-                     data: OrganizationUpdate) -> OrganizationResponse:
-        organization = await self._get_one(organization_id)
-        organization = await self._repository.update(organization, data)
-        return self._mapper.model_to_schema(organization)
-
-
     async def update_many(self, data: list[Organization], updated_data: list[OrganizationUpdate]) -> list[OrganizationResponse]:
         organization_to_update_schema = {}
         uuid_to_updated_organization = {organization.id: organization for organization in updated_data}
@@ -69,15 +62,6 @@ class OrganizationService:
                 organization_to_update_schema[organization] = uuid_to_updated_organization[organization.id]
         updated_organizations = await self._repository.update_many(organization_to_update_schema)
         return self._mapper.model_to_schema_list(updated_organizations)
-
-
-    async def delete(
-            self,
-            organization_id: UUID,
-    ) -> OrganizationResponse:
-        organization = await self._get_one(organization_id)
-        deleted_organization = await self._repository.delete(organization)
-        return self._mapper.model_to_schema(deleted_organization)
 
 
     async def delete_many(
