@@ -100,3 +100,7 @@ class UserService:
         elif user_id:
             user = await self._get_one(user_id)
             await self._repository.delete(user)
+            await self._user_organization_service.delete_many(
+                user_id,
+                [organization.id for organization in user.organizations]
+            )
