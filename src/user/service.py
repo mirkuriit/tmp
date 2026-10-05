@@ -59,7 +59,7 @@ class UserService:
         )
         if not user:
             raise ResourceExistsException(
-                detail="Same user already exists"
+                detail="Same unique field already exists"
             )
         if data.organizations:
             organizations = await self._organization_service.create_many(data.organizations)
