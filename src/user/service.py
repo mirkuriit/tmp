@@ -95,8 +95,8 @@ class UserService:
             organization_id: UUID | None = None,
     ) -> None:
         if user_id and organization_id:
-            await self._organization_service.delete(organization_id)
-            await self._user_organization_service.delete(user_id, organization_id)
+            await self._organization_service.delete_many([organization_id])
+            await self._user_organization_service.delete_many(user_id, [organization_id])
         elif user_id:
             user = await self._get_one(user_id)
             await self._repository.delete(user)

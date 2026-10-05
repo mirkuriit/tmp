@@ -62,13 +62,12 @@ class OrganizationService:
 
 
     async def update_many(self, data: list[Organization], updated_data: list[OrganizationUpdate]) -> list[OrganizationResponse]:
-        updated_organizations = []
-        uuid_to_update_organization = {organization.id: organization for organization in updated_data}
+        organization_to_update_schema = {}
+        uuid_to_updated_organization = {organization.id: organization for organization in updated_data}
         for organization in data:
-            if organization.id in uuid_to_update_organization:
-                updated_organization = await self._repository.update(organization, uuid_to_update_organization[organization.id])
-                updated_organizations.append(updated_organization)
-
+            if organization.id in uuid_to_updated_organization:
+                organization_to_update_schema[organization] = uuid_to_updated_organization[organization.id]
+        updated_organizations = await self._repository.update_many(organization_to_update_schema)
         return self._mapper.model_to_schema_list(updated_organizations)
 
 
@@ -85,5 +84,5 @@ class OrganizationService:
             self,
             organization_ids: list[UUID]
     ) -> None:
-        for organization_id in organization_ids:
-            await self.delete(organization_id)
+        organizations = [await self._get_one(organization_id) for organization_id in organization_ids]
+        await self._repository.delete_many(organizations)

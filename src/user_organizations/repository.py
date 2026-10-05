@@ -39,3 +39,9 @@ class UserOrganizationRepository:
         user_organization.is_deleted = True
         await self._session.flush()
         return user_organization
+
+    async def delete_many(self, user_organizations: list[UserOrganization]) -> list[UserOrganization]:
+        for user_organization in user_organizations:
+            user_organization.is_deleted = True
+        await self._session.flush()
+        return user_organizations

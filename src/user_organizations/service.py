@@ -50,3 +50,8 @@ class UserOrganizationService:
         user_organization = await self._get_one(user_id, organization_id)
         deleted = await self._repository.delete(user_organization)
         return self._mapper.model_to_schema(deleted)
+
+    async def delete_many(self, user_id: UUID, organization_ids: list[UUID]) -> list[UserOrganizationResponse]:
+        user_organizations = [await self._get_one(user_id, organization_id) for organization_id in organization_ids]
+        deleted = await self._repository.delete_many(user_organizations)
+        return self._mapper.model_to_schema_list(deleted)
