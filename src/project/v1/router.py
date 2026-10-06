@@ -2,7 +2,7 @@ import datetime as dt
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
@@ -31,7 +31,7 @@ async def get_projects(
         project_service: Annotated[ProjectService, Depends(get_read_project_service)],
         show_after_datetime: dt.datetime | None = None,
         show_after_id: UUID | None = None,
-        limit: int = 10
+        limit: Annotated[int, Query(ge=1, le=200)] = 10,
 
 ) -> PaginatedProjectResponse:
    return await project_service.get_many(show_after_datetime, show_after_id, limit)

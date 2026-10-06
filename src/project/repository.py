@@ -19,7 +19,7 @@ class ProjectRepository:
             project_id: UUID,
             *,
             is_deleted: bool = False,
-    ):
+    ) -> Project | None:
         filters = [
             Project.id == project_id,
             Project.is_deleted == is_deleted
@@ -57,14 +57,14 @@ class ProjectRepository:
         return project
 
 
-    async def update(self, project: Project, updated_schema: ProjectUpdate):
+    async def update(self, project: Project, updated_schema: ProjectUpdate) -> Project:
         project = ProjectMapper.update_model_from_schema(project, updated_schema)
         await self._session.flush()
         return project
 
 
     async def delete(self, project: Project, llm_model_id: UUID | None = None) -> Project:
-        if project:
+        if project and llm_model_id is None:
             project.is_deleted = True
         for model in project.llm_models:
             if model.id == llm_model_id or llm_model_id is None:
