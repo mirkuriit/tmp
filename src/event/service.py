@@ -1,6 +1,7 @@
 import datetime as dt
 from uuid import UUID
 
+from src.cache import CacheClient
 from src.event.mapper import EventMapper
 from src.event.model import Event
 from src.event.repository import EventRepository
@@ -17,10 +18,12 @@ from src.logger import logger
 class EventService:
     def __init__(
             self, repository: EventRepository,
-            mapper: EventMapper
+            mapper: EventMapper,
+            cache_client: CacheClient
     ) -> None:
         self._mapper = mapper
         self._repository = repository
+        self._cache_client = cache_client
 
     async def _get_one(
             self,
@@ -38,8 +41,13 @@ class EventService:
         return event
 
     async def get_one(self, event_id: UUID) -> EventResponse:
-        event = await self._get_one(event_id)
-        return self._mapper.model_to_schema(event)
+        cache_key = f"event:{event_id}"
+        event = await self._cache_client.get(cache_key, EventResponse)
+        if not event:
+            event = await self._get_one(event_id)
+            event = self._mapper.model_to_schema(event)
+            await self._cache_client.set(cache_key, event)
+        return event
 
     async def get_many(
             self,
@@ -47,13 +55,16 @@ class EventService:
             show_after_id: UUID | None,
             limit: int
     ) -> PaginatedEventResponse:
-        events = await self._repository.get_many(show_after_datetime,
-                                                   show_after_id, limit)
+        cache_key = f"events:{show_after_id}:{show_after_datetime}:{limit}"
+        events = await self._cache_client.get(cache_key, PaginatedEventResponse)
         if not events:
-            raise NotFoundException(
-                detail="Events not found"
+            models = await self._repository.get_many(
+                show_after_datetime,
+                show_after_id, limit
             )
-        return self._mapper.models_to_pagination_schema(events)
+            events = self._mapper.models_to_pagination_schema(models)
+            await self._cache_client.set(cache_key, events)
+        return events
 
     async def create(self, data: EventCreate) -> EventResponse:
         event = await self._repository.create(

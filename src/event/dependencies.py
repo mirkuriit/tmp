@@ -4,6 +4,7 @@ from typing import Annotated, Any
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.cache import cache_client
 from src.db import get_read_session, get_session
 from src.event.mapper import EventMapper
 from src.event.repository import EventRepository
@@ -16,7 +17,7 @@ def event_service_dependency(session_dependency: Callable[..., Any]) -> Callable
     ) -> EventService:
         repository = EventRepository(session)
         mapper = EventMapper()
-        return EventService(repository, mapper)
+        return EventService(repository, mapper, cache_client)
 
     return dependency
 
