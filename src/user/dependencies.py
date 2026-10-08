@@ -4,6 +4,7 @@ from typing import Annotated, Any
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.cache import cache_client
 from src.db import get_read_session, get_session
 from src.organization.mapper import OrganizationMapper
 from src.organization.repository import OrganizationRepository
@@ -37,12 +38,14 @@ def user_service_dependency(session_dependency: Callable[..., Any]) -> Callable[
             user_organization_mapper
         )
 
+        user_cache_client = cache_client
+
         return UserService(
             user_repository,
             user_mapper,
             organization_service,
             user_organization_service,
-
+            user_cache_client
         )
 
     return dependency
