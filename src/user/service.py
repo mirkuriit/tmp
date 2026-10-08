@@ -54,7 +54,7 @@ class UserService:
 
     async def get_many(self, show_after_datetime: dt.datetime | None,
                        show_after_id: UUID | None, limit: int) -> PaginatedUserResponse:
-        cache_key = f"users:{show_after_id}:{show_after_datetime}:{show_after_id}"
+        cache_key = f"users:{show_after_id}:{show_after_datetime}:{limit}"
         users = await self._cache_client.get(
             cache_key,
             PaginatedUserResponse
