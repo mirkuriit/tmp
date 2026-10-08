@@ -44,16 +44,17 @@ class UserService:
         return user
 
     async def get_one(self, user_id: UUID) -> UserResponse:
-        user = await self._cache_client.get(f"user:{user_id}", UserResponse)
+        cache_key = f"user:{user_id}"
+        user = await self._cache_client.get(cache_key, UserResponse)
         if not user:
             user = await self._get_one(user_id)
             user = self._mapper.model_to_schema(user)
-            await self._cache_client.set(f"user-{user_id}", user)
+            await self._cache_client.set(cache_key, user)
         return user
 
     async def get_many(self, show_after_datetime: dt.datetime | None,
                        show_after_id: UUID | None, limit: int) -> PaginatedUserResponse:
-        cache_key = f"users-{show_after_id}-{show_after_datetime}-{show_after_id}"
+        cache_key = f"users:{show_after_id}:{show_after_datetime}:{show_after_id}"
         users = await self._cache_client.get(
             cache_key,
             PaginatedUserResponse
