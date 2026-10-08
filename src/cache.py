@@ -9,6 +9,7 @@ from src.config import settings
 T = TypeVar("T", bound=BaseModel)
 
 class CacheClient:
+    DEFAULT_KEY_TTL = 30
     def __init__(self, client: redis.Redis):
         self._client = client
 
@@ -28,6 +29,7 @@ class CacheClient:
         return await self._client.set(
             key,
             data.model_dump_json(),
+            ex=self.DEFAULT_KEY_TTL
         )
 
 cache_client = CacheClient(
