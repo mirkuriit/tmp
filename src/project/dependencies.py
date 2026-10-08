@@ -18,8 +18,7 @@ def project_service_dependency(session_dependency: Callable[..., Any]) -> Callab
         repository = ProjectRepository(session)
         mapper = ProjectMapper()
 
-        project_cache_client = cache_client
-        return ProjectService(repository, mapper, project_cache_client)
+        return ProjectService(repository, mapper, cache_client)
 
     return dependency
 
