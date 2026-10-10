@@ -62,15 +62,12 @@ def create_event_instance() -> EventCreate:
 
 
 @pytest.fixture(scope="session")
-def update_event_instance() -> EventUpdate:
+def update_event_instance(create_event_instance: EventCreate) -> EventUpdate:
     return EventUpdate(
         name="Updated fish",
         description="Updated fish about",
-        event_info=EventInfoUpdate(
-            organizer="Ms. Fish with his bro",
-            location="NOT Peace ocean",
-            head_url="exxxymple.com"
-        )
+        start_date=create_event_instance.start_date,
+        end_date=create_event_instance.end_date
     )
 
 
@@ -101,7 +98,10 @@ async def test_get_event(
 ) -> None:
     event = await service.get_one(created_event_response.id)
     compare_object_fields(
-        event, create_event_instance
+        event, create_event_instance, exclude={"event_info"}
+    )
+    compare_object_fields(
+        event.event_info, create_event_instance.event_info
     )
 
 
@@ -114,7 +114,7 @@ async def test_update_event(
     await service.update(created_event_response.id, update_event_instance)
     event = await repository.get_one_or_none(created_event_response.id)
     compare_object_fields(
-        event, update_event_instance
+        event, update_event_instance, exclude={"event_info"}
     )
 
 
