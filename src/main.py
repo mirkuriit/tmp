@@ -1,3 +1,5 @@
+import redis.asyncio as redis
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -7,6 +9,16 @@ from src.healthchek.healthcheck_router import router as healthcheck_router
 from src.middleware import LogMiddleware
 from src.project.v1.router import router as project_router_v1
 from src.user.v1.router import router as user_router_v1
+from src.config import settings
+from src.cache import  CacheClient
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    redis_client = redis.Redis.from_url(settings.redis_url, decode_responses=True)
+    app.state.cache_client = CacheClient(redis_client)
+    yield
+    await redis_client.aclose()
 
 
 def add_routers(app: FastAPI) -> None:
@@ -31,6 +43,7 @@ def get_app() -> FastAPI:
         docs_url='/docs',
         openapi_url='/openapi.json',
         default_response_class=JSONResponse,
+        lifespan=lifespan
     )
 
     add_routers(app)

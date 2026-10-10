@@ -3,8 +3,7 @@ from typing import TypeVar
 
 import redis.asyncio as redis
 from pydantic import BaseModel
-
-from src.config import settings
+from starlette.requests import Request
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -32,6 +31,5 @@ class CacheClient:
             ex=self.DEFAULT_KEY_TTL
         )
 
-cache_client = CacheClient(
-            redis.Redis.from_url(settings.redis_url, decode_responses=True),
-        )
+def get_cache_client(request: Request) -> CacheClient:
+    return request.app.state.cache_client
