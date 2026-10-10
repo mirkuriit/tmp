@@ -2,13 +2,12 @@ import datetime as dt
 from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, ConfigDict
 from pydantic_core import PydanticCustomError
 
 
 class Base(BaseModel):
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginatedResponse(BaseModel):
