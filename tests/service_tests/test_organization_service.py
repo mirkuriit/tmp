@@ -1,7 +1,6 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.exceptions import NotFoundException
 from src.organization.mapper import OrganizationMapper
 from src.organization.repository import OrganizationRepository
 from src.organization.schema import (

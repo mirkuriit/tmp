@@ -2,10 +2,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.cache import CacheClient
-from src.exceptions import NotFoundException, ResourceExistsException
 from src.organization.mapper import OrganizationMapper
 from src.organization.repository import OrganizationRepository
-from src.organization.schema import OrganizationCreate, OrganizationUpdate
+from src.organization.schema import OrganizationCreate
 from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
 from src.user.repository import UserRepository

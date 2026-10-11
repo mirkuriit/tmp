@@ -1,6 +1,6 @@
-from src.logger import logger
-
 from typing import Any
+
+from src.logger import logger
 
 
 def compare_object_fields(

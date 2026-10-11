@@ -1,19 +1,15 @@
 import datetime as dt
+
 import pytest
-
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.cache import CacheClient
+from src.event.mapper import EventMapper
+from src.event.repository import EventRepository
 from src.event.schema import EventCreate, EventResponse, EventUpdate
 from src.event.service import EventService
-from src.event.repository import EventRepository
-from src.event.mapper import EventMapper
-
-
-from src.event_info.schema import EventInfoCreate, EventInfoUpdate
+from src.event_info.schema import EventInfoCreate
 from tests.utils import compare_object_fields
-
 
 
 @pytest.fixture(scope="session")

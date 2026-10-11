@@ -1,14 +1,19 @@
+from typing import TypeVar
+
 import pytest
 import redis.asyncio as redis
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, \
-    create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from testcontainers.community.postgres import PostgresContainer
 from testcontainers.community.redis import RedisContainer
 
 from src.cache import CacheClient
 from src.models import Base
 from src.utils import import_models
-from typing import TypeVar
 
 T = TypeVar("T")
 

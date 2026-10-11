@@ -1,16 +1,17 @@
-import redis.asyncio as redis
 from contextlib import asynccontextmanager
+
+import redis.asyncio as redis
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
+from src.cache import CacheClient
+from src.config import settings
 from src.event.v1.router import router as event_router_v1
 from src.healthchek.healthcheck_router import router as healthcheck_router
 from src.middleware import LogMiddleware
 from src.project.v1.router import router as project_router_v1
 from src.user.v1.router import router as user_router_v1
-from src.config import settings
-from src.cache import  CacheClient
 
 
 @asynccontextmanager

@@ -1,21 +1,15 @@
-import datetime as dt
 from decimal import Decimal
 
 import pytest
-
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.cache import CacheClient
 from src.llm_models.schema import LLMModelCreate
+from src.project.mapper import ProjectMapper
+from src.project.repository import ProjectRepository
 from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
 from src.project.service import ProjectService
-from src.project.repository import ProjectRepository
-from src.project.mapper import ProjectMapper
-
-
 from tests.utils import compare_object_fields
-
 
 
 @pytest.fixture(scope="session")

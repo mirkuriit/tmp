@@ -2,7 +2,7 @@ import datetime as dt
 from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic_core import PydanticCustomError
 
 
