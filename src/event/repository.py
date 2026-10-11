@@ -2,12 +2,13 @@ import datetime as dt
 from uuid import UUID
 
 from sqlalchemy import Sequence, and_, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.event.mapper import EventMapper
 from src.event.model import Event
 from src.event.schema import EventUpdate
-
+from src.exceptions import DuplicateFieldException
 
 class EventRepository:
     def __init__(self, db_session: AsyncSession):
@@ -57,9 +58,15 @@ class EventRepository:
 
 
     async def create(self, event: Event) -> Event:
-        self._session.add(event)
-        await self._session.flush()
-        return event
+        try:
+            self._session.add(event)
+            await self._session.flush()
+            return event
+        except IntegrityError as ex:
+            constraint = getattr(ex.orig.__cause__, "constraint_name", None)
+            if constraint == "events_name_key":
+                raise DuplicateFieldException(detail=f"Event with name '{event.name}' already exists") from ex
+            raise
 
 
     async def update(self, event: Event, updated_schema: EventUpdate) -> Event:
