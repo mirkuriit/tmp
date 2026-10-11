@@ -100,4 +100,5 @@ class EventService:
     ) -> EventResponse:
         event = await self._get_one(event_id)
         deleted_event = await self._repository.delete(event)
+        await self._cache_client.delete(f"event:{event_id}")
         return self._mapper.model_to_schema(deleted_event)

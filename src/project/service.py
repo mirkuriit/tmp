@@ -76,4 +76,5 @@ class ProjectService:
     ) -> ProjectResponse:
         project = await self._get_one(project_id)
         deleted_project = await self._repository.delete(project, llm_model_id)
+        await self._cache_client.delete(f"project:{project_id}")
         return self._mapper.model_to_schema(deleted_project)

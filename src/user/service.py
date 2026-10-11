@@ -121,3 +121,4 @@ class UserService:
                 user_id,
                 [organization.id for organization in user.organizations]
             )
+        await self._cache_client.delete(f"user:{user_id}")
