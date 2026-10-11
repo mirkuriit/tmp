@@ -1,5 +1,6 @@
 from typing import Any
 from uuid import UUID, uuid4
+from copy import deepcopy
 
 import pytest
 from httpx import AsyncClient
@@ -92,25 +93,28 @@ async def test_update_event_with_exists_name(
         created_event_id: UUID,
         client: AsyncClient,
         update_event_body: dict[str, Any],
+        create_event_body: dict[str, Any]
 ):
-    await client.post(
-        f"/event/v1/{created_event_id}",
-        json=update_event_body
+    modified_create_event_body = deepcopy(create_event_body)
+    modified_create_event_body["name"] = "somename"
+    response = await client.post(
+        "/event/v1",
+        json=modified_create_event_body
     )
+    assert response.status_code == HTTP_201_CREATED
+    assert response.json()["name"] == modified_create_event_body["name"]
+    event_id_for_delete_after_test = response.json().get("id")
+
     response = await client.patch(
         f"/event/v1/{created_event_id}",
-        json=update_event_body
+        json=modified_create_event_body
     )
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_409_CONFLICT
 
-    response = await client.get(
-        f"/event/v1/{created_event_id}",
+    response = await client.delete(
+        f"/event/v1/{event_id_for_delete_after_test}",
     )
-    assert response.status_code == HTTP_200_OK
-    compare_dict_fields(
-        response.json(), update_event_body,
-        only_include={"name", "description"}
-    )
+    assert response.status_code == HTTP_204_NO_CONTENT
 
 
 async def test_update_not_exists_event(
