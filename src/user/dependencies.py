@@ -4,7 +4,7 @@ from typing import Annotated, Any
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.cache import get_cache_client, CacheClient
+from src.cache import CacheClient, get_cache_client
 from src.db import get_read_session, get_session
 from src.organization.mapper import OrganizationMapper
 from src.organization.repository import OrganizationRepository
