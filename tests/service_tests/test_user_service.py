@@ -107,7 +107,7 @@ async def test_get_many_users(
     for user in users.items:
         if user.id == created_user_response.id:
             compare_object_fields(
-                users.items[0], created_user_response
+                user, created_user_response
             )
 
 
