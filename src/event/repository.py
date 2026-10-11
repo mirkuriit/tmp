@@ -10,6 +10,7 @@ from src.event.model import Event
 from src.event.schema import EventUpdate
 from src.exceptions import DuplicateFieldException
 
+
 class EventRepository:
     def __init__(self, db_session: AsyncSession):
         self._session = db_session

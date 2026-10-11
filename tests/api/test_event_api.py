@@ -1,11 +1,16 @@
+from copy import deepcopy
 from typing import Any
 from uuid import UUID, uuid4
-from copy import deepcopy
 
 import pytest
 from httpx import AsyncClient
-from starlette.status import HTTP_201_CREATED, HTTP_409_CONFLICT, HTTP_200_OK, \
-    HTTP_404_NOT_FOUND, HTTP_204_NO_CONTENT
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+)
 
 from tests.utils import compare_dict_fields
 
@@ -173,7 +178,7 @@ async def test_get_events(
         )
 
     response = await client.get(
-        f"/event/v1/",
+        "/event/v1/",
         params={
             "limit": first_events_pack,
         }
@@ -182,11 +187,9 @@ async def test_get_events(
     assert len(response.json()["items"]) == first_events_pack
     for i, item in enumerate(response.json()["items"]):
         assert item["name"] == f"name #{i}"
-    from src.logger import logger
-    logger.info(response.json())
 
     response = await client.get(
-        f"/event/v1/",
+        "/event/v1/",
         params={
             "show_after_datetime": response.json().get("last_seen_datetime"),
             "show_after_id" : response.json().get("last_seen_id"),

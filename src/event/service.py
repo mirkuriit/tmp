@@ -1,8 +1,7 @@
 import datetime as dt
-from fastapi.exceptions import HTTPException
 from uuid import UUID
 
-from sqlalchemy.exc import IntegrityError
+from fastapi.exceptions import HTTPException
 from starlette.status import HTTP_409_CONFLICT
 
 from src.cache import CacheClient
@@ -15,7 +14,7 @@ from src.event.schema import (
     EventUpdate,
     PaginatedEventResponse,
 )
-from src.exceptions import NotFoundException, DuplicateFieldException
+from src.exceptions import DuplicateFieldException, NotFoundException
 from src.logger import logger
 
 

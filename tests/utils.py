@@ -1,7 +1,5 @@
 from typing import Any
 
-from src.logger import logger
-
 
 def compare_object_fields(
         obj1: Any,
@@ -13,10 +11,8 @@ def compare_object_fields(
     attributes = (set(vars(obj1)) & set(vars(obj2)))
     if only_include:
         attributes = attributes & only_include
-    logger.info(f"Attributes: {attributes}")
     for attribute in attributes:
         if exclude is None or attribute not in exclude:
-            logger.info(f"obj1: {getattr(obj1, attribute)} | obj2: {getattr(obj2, attribute)}")
             assert getattr(obj1, attribute) == getattr(obj2, attribute)
 
 
@@ -30,8 +26,6 @@ def compare_dict_fields(
     attributes = set(obj1.keys()) & set(obj2.keys())
     if only_include:
         attributes = attributes & only_include
-    logger.info(f"Attributes: {attributes}")
     for attribute in attributes:
         if exclude is None or attribute not in exclude:
-            logger.info(f"obj1: {obj1[attribute]} | obj2: {obj2[attribute]}")
             assert obj1[attribute] == obj2[attribute]

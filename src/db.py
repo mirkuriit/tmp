@@ -2,6 +2,7 @@ from collections.abc import Callable
 
 from starlette.requests import Request
 
+
 async def get_session(request: Request) -> Callable:
     async with request.app.state.SessionFactory() as session:
         try:
