@@ -93,6 +93,10 @@ async def test_update_event_with_exists_name(
         client: AsyncClient,
         update_event_body: dict[str, Any],
 ):
+    await client.post(
+        f"/event/v1/{created_event_id}",
+        json=update_event_body
+    )
     response = await client.patch(
         f"/event/v1/{created_event_id}",
         json=update_event_body
@@ -109,7 +113,19 @@ async def test_update_event_with_exists_name(
     )
 
 
-async def test_delete_event(
+async def test_update_not_exists_event(
+        created_event_id: UUID,
+        client: AsyncClient,
+        update_event_body: dict[str, Any],
+):
+    response = await client.patch(
+        f"/event/v1/{uuid4()}",
+        json=update_event_body
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+async def test_delete_exists_event(
         created_event_id: UUID,
         client: AsyncClient,
         update_event_body: dict[str, Any],
@@ -125,7 +141,17 @@ async def test_delete_event(
     assert response.status_code == HTTP_404_NOT_FOUND
 
 
-# TODO проверки
+async def test_delete_not_exists_event(
+        created_event_id: UUID,
+        client: AsyncClient,
+        update_event_body: dict[str, Any],
+):
+    response = await client.delete(
+        f"/event/v1/{uuid4()}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
 async def test_get_events(
         created_event_id: UUID,
         client: AsyncClient,
