@@ -2,6 +2,7 @@ import pytest
 import sqlalchemy as sa
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from src.config import settings, Settings
@@ -10,7 +11,7 @@ from src.main import get_app
 
 
 @pytest.fixture(scope="session")
-def app(redis_container, postgres_container, db_engine):
+def app(redis_container, postgres_container):
     app = get_app(
         Settings(
             postgres_url=postgres_container.get_connection_url(),
@@ -22,6 +23,9 @@ def app(redis_container, postgres_container, db_engine):
     return app
 
 @pytest.fixture(scope="session")
-async def client(app: FastAPI, db_engine) -> TestClient:
-    with TestClient(app) as client:
-        yield client
+async def client(app: FastAPI) -> AsyncClient:
+    async with app.router.lifespan_context(app):
+        async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            yield client

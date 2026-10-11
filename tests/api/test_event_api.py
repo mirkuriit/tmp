@@ -2,7 +2,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from starlette.status import HTTP_201_CREATED, HTTP_409_CONFLICT, HTTP_200_OK, \
     HTTP_404_NOT_FOUND, HTTP_204_NO_CONTENT
 
@@ -33,9 +33,9 @@ def update_event_body() -> dict[str, Any]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def created_event_id(client: TestClient,
+async def created_event_id(client: AsyncClient,
                            create_event_body: dict[str, Any]) -> str:
-    response = client.post(
+    response = await client.post(
         "/event/v1",
         json=create_event_body
     )
@@ -48,10 +48,10 @@ async def created_event_id(client: TestClient,
 
 
 async def test_create_event_with_exists_name(
-        client: TestClient,
+        client: AsyncClient,
         create_event_body: dict[str, Any],
 ):
-    response = client.post(
+    response = await client.post(
         "/event/v1",
         json=create_event_body
     )
@@ -61,10 +61,10 @@ async def test_create_event_with_exists_name(
 
 async def test_get_exists_event(
         created_event_id: UUID,
-        client: TestClient,
+        client: AsyncClient,
         create_event_body: dict[str, Any]
 ):
-    response = client.get(
+    response = await client.get(
         f"/event/v1/{created_event_id}",
     )
 
@@ -79,9 +79,9 @@ async def test_get_exists_event(
 
 
 async def test_get_not_exists_event(
-        client: TestClient,
+        client: AsyncClient,
 ):
-    response = client.get(
+    response = await client.get(
         f"/event/v1/{uuid4()}",
     )
 
@@ -90,16 +90,16 @@ async def test_get_not_exists_event(
 
 async def test_update_event_with_exists_name(
         created_event_id: UUID,
-        client: TestClient,
+        client: AsyncClient,
         update_event_body: dict[str, Any],
 ):
-    response = client.patch(
+    response = await client.patch(
         f"/event/v1/{created_event_id}",
         json=update_event_body
     )
     assert response.status_code == HTTP_200_OK
 
-    response = client.get(
+    response = await client.get(
         f"/event/v1/{created_event_id}",
     )
     assert response.status_code == HTTP_200_OK
@@ -111,15 +111,15 @@ async def test_update_event_with_exists_name(
 
 async def test_delete_event(
         created_event_id: UUID,
-        client: TestClient,
+        client: AsyncClient,
         update_event_body: dict[str, Any],
 ):
-    response = client.delete(
+    response = await client.delete(
         f"/event/v1/{created_event_id}",
     )
     assert response.status_code == HTTP_204_NO_CONTENT
 
-    response = client.get(
+    response = await client.get(
         f"/event/v1/{created_event_id}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
@@ -128,7 +128,7 @@ async def test_delete_event(
 # TODO проверки
 async def test_get_events(
         created_event_id: UUID,
-        client: TestClient,
+        client: AsyncClient,
         create_event_body: dict[str, Any]
 ):
     event_count = 10
@@ -137,13 +137,12 @@ async def test_get_events(
 
     for i in range(event_count):
         create_event_body["name"] = f"name #{i}"
-        client.post(
+        await client.post(
             "/event/v1",
             json=create_event_body
         )
 
-
-    response = client.get(
+    response = await client.get(
         f"/event/v1/",
         params={
             "limit": first_events_pack,
@@ -156,7 +155,7 @@ async def test_get_events(
     from src.logger import logger
     logger.info(response.json())
 
-    response = client.get(
+    response = await client.get(
         f"/event/v1/",
         params={
             "show_after_datetime": response.json().get("last_seen_datetime"),

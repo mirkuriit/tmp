@@ -24,7 +24,7 @@ def postgres_container():
         yield pg
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 async def db_engine(postgres_container: PostgresContainer):
     engine = create_async_engine(postgres_container.get_connection_url())
     import_models()
