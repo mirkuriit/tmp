@@ -7,6 +7,7 @@ from testcontainers.community.redis import RedisContainer
 
 from src.cache import CacheClient
 from src.models import Base
+from src.utils import import_models
 from typing import TypeVar
 
 T = TypeVar("T")
@@ -21,7 +22,7 @@ def postgres_container():
 @pytest.fixture(scope="session")
 async def db_engine(postgres_container: PostgresContainer):
     engine = create_async_engine(postgres_container.get_connection_url())
-
+    import_models()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
