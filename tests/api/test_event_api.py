@@ -164,9 +164,9 @@ async def test_get_events(
     event_count = 10
     first_events_pack = 7
     second_events_pack_limit = 3
-
+    body = deepcopy(create_event_body)
     for i in range(event_count):
-        create_event_body["name"] = f"name #{i}"
+        body["name"] = f"name #{i}"
         await client.post(
             "/event/v1",
             json=create_event_body
