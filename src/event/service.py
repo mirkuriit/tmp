@@ -1,5 +1,9 @@
 import datetime as dt
+from fastapi.exceptions import HTTPException
 from uuid import UUID
+
+from sqlalchemy.exc import IntegrityError
+from starlette.status import HTTP_409_CONFLICT
 
 from src.cache import CacheClient
 from src.event.mapper import EventMapper
@@ -11,7 +15,7 @@ from src.event.schema import (
     EventUpdate,
     PaginatedEventResponse,
 )
-from src.exceptions import NotFoundException
+from src.exceptions import NotFoundException, DuplicateFieldException
 from src.logger import logger
 
 
@@ -67,8 +71,17 @@ class EventService:
         return events
 
     async def create(self, data: EventCreate) -> EventResponse:
-        event = await self._repository.create(
-            self._mapper.schema_to_model(data))
+        try:
+            event = await self._repository.create(
+                self._mapper.schema_to_model(data)
+            )
+        except DuplicateFieldException as ex:
+            raise HTTPException(
+                status_code=HTTP_409_CONFLICT,
+                detail=ex.detail
+            )
+
+
         return self._mapper.model_to_schema(event)
 
     async def update(
@@ -78,6 +91,7 @@ class EventService:
     ) -> EventResponse:
         event = await self._get_one(event_id)
         await self._repository.update(event, data)
+        await self._cache_client.delete(f"event:{event_id}")
         return self._mapper.model_to_schema(event)
 
     async def delete(
