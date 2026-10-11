@@ -81,7 +81,6 @@ class EventService:
                 detail=ex.detail
             )
 
-
         return self._mapper.model_to_schema(event)
 
     async def update(
@@ -90,7 +89,13 @@ class EventService:
             data: EventUpdate
     ) -> EventResponse:
         event = await self._get_one(event_id)
-        await self._repository.update(event, data)
+        try:
+            await self._repository.update(event, data)
+        except DuplicateFieldException as ex:
+            raise HTTPException(
+                status_code=HTTP_409_CONFLICT,
+                detail=ex.detail
+            )
         await self._cache_client.delete(f"event:{event_id}")
         return self._mapper.model_to_schema(event)
 

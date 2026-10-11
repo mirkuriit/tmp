@@ -70,9 +70,15 @@ class EventRepository:
 
 
     async def update(self, event: Event, updated_schema: EventUpdate) -> Event:
-        event = EventMapper.update_model_from_schema(event, updated_schema)
-        await self._session.flush()
-        return event
+        try:
+            event = EventMapper.update_model_from_schema(event, updated_schema)
+            await self._session.flush()
+            return event
+        except IntegrityError as ex:
+            constraint = getattr(ex.orig.__cause__, "constraint_name", None)
+            if constraint == "events_name_key":
+                raise DuplicateFieldException(detail=f"Event with name '{updated_schema.name}' already exists") from ex
+            raise
 
 
     async def delete(self, event: Event) -> Event:
