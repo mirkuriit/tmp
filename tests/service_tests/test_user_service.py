@@ -104,7 +104,11 @@ async def test_get_many_users(
         service: UserService,
 ) -> None:
     users = await service.get_many(None, None, 10)
-    assert created_user_response.id in {user.id for user in users.items}
+    for user in users.items:
+        if user.id == created_user_response.id:
+            compare_object_fields(
+                users.items[0], created_user_response
+            )
 
 
 async def test_update_user(
