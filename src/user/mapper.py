@@ -1,7 +1,7 @@
 from typing import Any
 
 import sqlalchemy as sa
-from sqlalchemy import Sequence
+from collections.abc import Sequence
 
 from src.user.model import User
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate

@@ -1,4 +1,4 @@
-from sqlalchemy import Sequence
+from collections.abc import Sequence
 
 from src.llm_models.model import LLMModel
 from src.project.model import Project

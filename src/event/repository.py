@@ -1,7 +1,8 @@
 import datetime as dt
+from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import Sequence, and_, or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 

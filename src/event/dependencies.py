@@ -11,7 +11,7 @@ from src.event.repository import EventRepository
 from src.event.service import EventService
 
 
-def event_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession], EventService]:
+def event_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession, CacheClient], EventService]:
     def dependency(
         session: Annotated[AsyncSession, Depends(session_dependency)],
         cache_client: Annotated[CacheClient, Depends(get_cache_client)],

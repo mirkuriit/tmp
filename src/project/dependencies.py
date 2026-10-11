@@ -11,7 +11,7 @@ from src.project.repository import ProjectRepository
 from src.project.service import ProjectService
 
 
-def project_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession], ProjectService]:
+def project_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession, CacheClient], ProjectService]:
     def dependency(
         session: Annotated[AsyncSession, Depends(session_dependency)],
         cache_client: Annotated[CacheClient, Depends(get_cache_client)],
