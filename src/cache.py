@@ -31,5 +31,8 @@ class CacheClient:
             ex=self.DEFAULT_KEY_TTL
         )
 
+    async def delete(self, key: str):
+        return await self._client.delete(key)
+
 def get_cache_client(request: Request) -> CacheClient:
     return request.app.state.cache_client
