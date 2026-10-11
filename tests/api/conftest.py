@@ -15,7 +15,7 @@ def app(redis_container, postgres_container):
     app = get_app(
         Settings(
             postgres_url=postgres_container.get_connection_url(),
-            redis_url=f"redis://{redis_container.get_container_host_ip()}:{redis_container.port}",
+            redis_url=f"redis://{redis_container.get_container_host_ip()}:{redis_container.get_exposed_port(6379)}",
             log_level="DEBUG"
         )
     )
