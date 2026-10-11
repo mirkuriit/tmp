@@ -1,6 +1,7 @@
 import datetime as dt
 from uuid import UUID
 
+from src.cache import CacheClient
 from src.exceptions import NotFoundException, ResourceExistsException
 from src.logger import logger
 from src.organization.service import OrganizationService
@@ -18,11 +19,13 @@ class UserService:
             mapper: UserMapper,
             organization_service: OrganizationService,
             user_organization_service: UserOrganizationService,
+            cache_client: CacheClient
     ) -> None:
         self._repository = repository
         self._mapper = mapper
         self._organization_service = organization_service
         self._user_organization_service = user_organization_service
+        self._cache_client = cache_client
 
 
     async def _get_one(
@@ -41,17 +44,30 @@ class UserService:
         return user
 
     async def get_one(self, user_id: UUID) -> UserResponse:
-        user = await self._get_one(user_id)
-        return self._mapper.model_to_schema(user)
+        cache_key = f"user:{user_id}"
+        user = await self._cache_client.get(cache_key, UserResponse)
+        if not user:
+            user = await self._get_one(user_id)
+            user = self._mapper.model_to_schema(user)
+            await self._cache_client.set(cache_key, user)
+        return user
 
     async def get_many(self, show_after_datetime: dt.datetime | None,
                        show_after_id: UUID | None, limit: int) -> PaginatedUserResponse:
-        users = await self._repository.get_many(
-            limit=limit,
-            show_after_datetime=show_after_datetime,
-            show_after_id=show_after_id, 
+        cache_key = f"users:{show_after_id}:{show_after_datetime}:{limit}"
+        users = await self._cache_client.get(
+            cache_key,
+            PaginatedUserResponse
         )
-        return self._mapper.models_to_pagination_schema(users)
+        if not users:
+            users = await self._repository.get_many(
+                limit=limit,
+                show_after_datetime=show_after_datetime,
+                show_after_id=show_after_id,
+            )
+            users = self._mapper.models_to_pagination_schema(users)
+            await self._cache_client.set(cache_key, users)
+        return users
 
     async def create(self, data: UserCreate) -> UserResponse:
         user = await self._repository.create(

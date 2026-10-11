@@ -1,4 +1,4 @@
-
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import select
@@ -24,6 +24,20 @@ class UserOrganizationRepository:
             UserOrganization.is_deleted == is_deleted,
         )
         return await self._session.scalar(statement)
+
+
+    async def get_by_user_id(
+            self,
+            user_id: UUID
+    ) -> Sequence[UserOrganization]:
+        statement = select(
+            UserOrganization
+        ).where(
+            UserOrganization.is_deleted == False,
+            UserOrganization.user_id == user_id
+        )
+
+        return (await self._session.scalars(statement)).all()
 
 
     async def create(self, user_organization: UserOrganization) -> UserOrganization:

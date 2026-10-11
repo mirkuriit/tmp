@@ -27,7 +27,7 @@ class UserMapper:
                 last_seen_datetime=None
             )
         return PaginatedUserResponse(
-            items=users,
+            items=[UserResponse.model_validate(user) for user in users],
             last_seen_id=users[-1].id,
             last_seen_datetime=users[-1].created_at
         )

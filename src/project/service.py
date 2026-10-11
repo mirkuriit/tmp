@@ -1,6 +1,7 @@
 import datetime as dt
 from uuid import UUID
 
+from src.cache import CacheClient
 from src.exceptions import NotFoundException
 from src.logger import logger
 from src.project.mapper import ProjectMapper
@@ -15,9 +16,10 @@ from src.project.schema import (
 
 
 class ProjectService:
-    def __init__(self, repository: ProjectRepository, mapper: ProjectMapper) -> None:
+    def __init__(self, repository: ProjectRepository, mapper: ProjectMapper, cache_client: CacheClient) -> None:
         self._mapper = mapper
         self._repository = repository
+        self._cache_client = cache_client
 
 
     async def _get_one(
@@ -37,16 +39,22 @@ class ProjectService:
 
 
     async def get_one(self, project_id: UUID) -> ProjectResponse:
-        project = await self._get_one(project_id)
-        return self._mapper.model_to_schema(project)
+        cache_key = f"project:{project_id}"
+        project = await self._cache_client.get(cache_key, ProjectResponse)
+        if not project:
+            project = await self._get_one(project_id)
+            project = self._mapper.model_to_schema(project)
+            await self._cache_client.set(cache_key, project)
+        return project
 
     async def get_many(self, show_after_datetime: dt.datetime | None, show_after_id: UUID | None, limit: int) -> PaginatedProjectResponse:
-        projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
+        cache_key = f"projects:{show_after_id}:{show_after_datetime}:{limit}"
+        projects = await self._cache_client.get(cache_key, PaginatedProjectResponse)
         if not projects:
-            raise NotFoundException(
-                detail="Projects not found"
-            )
-        return self._mapper.models_to_pagination_schema(projects)
+            projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
+            projects = self._mapper.models_to_pagination_schema(projects)
+            await self._cache_client.set(cache_key, projects)
+        return projects
 
 
     async def create(self, data: ProjectCreate) -> ProjectResponse:
