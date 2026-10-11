@@ -88,6 +88,9 @@ async def test_create_event(
     compare_object_fields(
         event, create_event_instance, exclude={"event_info"}
     )
+    compare_object_fields(
+        event.event_info, create_event_instance.event_info
+    )
 
 
 async def test_get_event(
