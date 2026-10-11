@@ -61,9 +61,11 @@ async def redis_client(redis_container: RedisContainer):
     host = redis_container.get_container_host_ip()
     port = redis_container.get_exposed_port(6379)
     client = redis.Redis.from_url(f"redis://{host}:{port}/0", decode_responses=True)
-    yield client
-    await client.flushall()
-    await client.aclose()
+    try:
+        yield client
+    finally:
+        await client.flushall()
+        await client.aclose()
 
 
 @pytest.fixture(scope="session")
