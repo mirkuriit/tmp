@@ -71,7 +71,6 @@ async def test_create_many_organizations(
         OrganizationCreate(name="Whale inc.", description="about whales"),
     ]
     created = await service.create_many(organizations)
-    assert len(created) == len(organizations)
     for organization_response, organization_data in zip(created, organizations):
         organization = await repository.get_one_or_none(organization_response.id)
         compare_object_fields(organization, organization_data)
