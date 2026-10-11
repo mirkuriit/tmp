@@ -2,6 +2,13 @@ from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
 from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
@@ -19,6 +26,19 @@ from src.user.v1.router import router as user_router_v1
 async def lifespan(app: FastAPI):
     redis_client = redis.Redis.from_url(app.state.settings.redis_url, decode_responses=True)
     app.state.cache_client = CacheClient(redis_client)
+
+    engine: AsyncEngine = create_async_engine(
+        app.state.settings.postgres_url,
+        pool_pre_ping=True,
+    )
+    SessionFactory = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    app.state.db_engine = engine
+    app.state.SessionFactory = SessionFactory
+
     yield
     await redis_client.aclose()
 
