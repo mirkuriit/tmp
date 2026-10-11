@@ -7,7 +7,12 @@ from src.cache import CacheClient
 from src.llm_models.schema import LLMModelCreate
 from src.project.mapper import ProjectMapper
 from src.project.repository import ProjectRepository
-from src.project.schema import ProjectCreate, ProjectResponse, ProjectUpdate
+from src.project.schema import (
+    PaginatedProjectResponse,
+    ProjectCreate,
+    ProjectResponse,
+    ProjectUpdate,
+)
 from src.project.service import ProjectService
 from tests.utils import compare_object_fields
 
@@ -79,11 +84,35 @@ async def test_get_project(
         created_project_response: ProjectResponse,
         repository: ProjectRepository,
         service: ProjectService,
+        cache_client: CacheClient,
 ) -> None:
+    cache_key = f"project:{created_project_response.id}"
+    await cache_client.delete(cache_key)
+    assert await cache_client.get(cache_key, ProjectResponse) is None
+
     project = await service.get_one(created_project_response.id)
+    cached_project = await cache_client.get(cache_key, ProjectResponse)
+    assert cached_project is not None
+    assert cached_project == project
     compare_object_fields(
         project, create_project_instance, exclude={"llm_models"}
     )
+
+
+async def test_get_many_projects(
+        created_project_response: ProjectResponse,
+        service: ProjectService,
+        cache_client: CacheClient,
+) -> None:
+    limit = 10
+    cache_key = f"projects:{None}:{None}:{limit}"
+    await cache_client.delete(cache_key)
+    assert await cache_client.get(cache_key, PaginatedProjectResponse) is None
+
+    projects = await service.get_many(None, None, limit)
+    cached_projects = await cache_client.get(cache_key, PaginatedProjectResponse)
+    assert cached_projects is not None
+    assert cached_projects == projects
 
 
 async def test_update_project(
@@ -91,8 +120,14 @@ async def test_update_project(
         created_project_response: ProjectResponse,
         repository: ProjectRepository,
         service: ProjectService,
+        cache_client: CacheClient,
 ) -> None:
+    cache_key = f"project:{created_project_response.id}"
+    await service.get_one(created_project_response.id)
+    assert await cache_client.get(cache_key, ProjectResponse) is not None
+
     await service.update(created_project_response.id, update_project_instance)
+    assert await cache_client.get(cache_key, ProjectResponse) is None
     project = await repository.get_one_or_none(created_project_response.id)
     compare_object_fields(
         project, update_project_instance, exclude={"llm_models"}

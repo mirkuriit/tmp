@@ -8,7 +8,12 @@ from src.organization.schema import OrganizationCreate
 from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
 from src.user.repository import UserRepository
-from src.user.schema import UserCreate, UserResponse, UserUpdate
+from src.user.schema import (
+    PaginatedUserResponse,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
 from src.user.service import UserService
 from src.user_organizations.mapper import UserOrganizationMapper
 from src.user_organizations.repository import UserOrganizationRepository
@@ -89,8 +94,16 @@ async def test_get_user(
         create_user_instance: UserCreate,
         created_user_response: UserResponse,
         service: UserService,
+        cache_client: CacheClient,
 ) -> None:
+    cache_key = f"user:{created_user_response.id}"
+    await cache_client.delete(cache_key)
+    assert await cache_client.get(cache_key, UserResponse) is None
+
     user = await service.get_one(created_user_response.id)
+    cached_user = await cache_client.get(cache_key, UserResponse)
+    assert cached_user is not None
+    assert cached_user == user
     compare_object_fields(
         user, create_user_instance, exclude={"organizations"}
     )
@@ -102,8 +115,17 @@ async def test_get_user(
 async def test_get_many_users(
         created_user_response: UserResponse,
         service: UserService,
+        cache_client: CacheClient,
 ) -> None:
-    users = await service.get_many(None, None, 10)
+    limit = 10
+    cache_key = f"users:{None}:{None}:{limit}"
+    await cache_client.delete(cache_key)
+    assert await cache_client.get(cache_key, PaginatedUserResponse) is None
+
+    users = await service.get_many(None, None, limit)
+    cached_users = await cache_client.get(cache_key, PaginatedUserResponse)
+    assert cached_users is not None
+    assert cached_users == users
     for user in users.items:
         if user.id == created_user_response.id:
             compare_object_fields(
@@ -116,8 +138,14 @@ async def test_update_user(
         created_user_response: UserResponse,
         repository: UserRepository,
         service: UserService,
+        cache_client: CacheClient,
 ) -> None:
+    cache_key = f"user:{created_user_response.id}"
+    await service.get_one(created_user_response.id)
+    assert await cache_client.get(cache_key, UserResponse) is not None
+
     await service.update(created_user_response.id, update_user_instance)
+    assert await cache_client.get(cache_key, UserResponse) is None
     user = await repository.get_one_or_none(created_user_response.id)
     compare_object_fields(
         user, update_user_instance, exclude={"organizations"}
