@@ -2,6 +2,8 @@ from typing import TypeVar
 
 import pytest
 import redis.asyncio as redis
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -12,6 +14,8 @@ from testcontainers.community.postgres import PostgresContainer
 from testcontainers.community.redis import RedisContainer
 
 from src.cache import CacheClient
+from src.config import Settings
+from src.main import get_app
 from src.models import Base
 from src.utils import import_models
 
@@ -69,5 +73,25 @@ async def redis_client(redis_container: RedisContainer):
 
 
 @pytest.fixture(scope="session")
-def cache_client(redis_client: redis.Redis):
-    return CacheClient(redis_client)
+def app(redis_container, postgres_container):
+    app = get_app(
+        Settings(
+            postgres_url=postgres_container.get_connection_url(),
+            redis_url=f"redis://{redis_container.get_container_host_ip()}:{redis_container.get_exposed_port(6379)}",
+            log_level="DEBUG"
+        )
+    )
+
+    return app
+
+@pytest.fixture(scope="session")
+async def client(app: FastAPI) -> AsyncClient:
+    async with app.router.lifespan_context(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        yield client
+
+
+@pytest.fixture(scope="session")
+def cache_client(redis_client: redis.Redis, app: FastAPI):
+    return CacheClient(redis_client, app.state.settings.default_cache_key_ttl)

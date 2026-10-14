@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.organization.mapper import OrganizationMapper
@@ -8,6 +9,7 @@ from src.organization.service import OrganizationService
 from src.user.model import User
 from src.user.repository import UserRepository
 from src.user_organizations.mapper import UserOrganizationMapper
+from src.user_organizations.model import UserOrganization
 from src.user_organizations.repository import UserOrganizationRepository
 from src.user_organizations.schema import (
     UserOrganizationResponse,
@@ -86,11 +88,16 @@ async def created_user_organizations_response(
 async def test_create_many_user_organization(
         user: User,
         created_user_organizations_response: list[UserOrganizationResponse],
-        repository: UserOrganizationRepository,
+        db_session: AsyncSession
 ) -> None:
-    user_organizations = await repository.get_by_user_id(
-        user.id
+    statement = select(
+        UserOrganization
+    ).where(
+        UserOrganization.is_deleted == False,
+        UserOrganization.user_id == user.id
     )
+
+    user_organizations =  (await db_session.scalars(statement)).all()
     for user_organization, created_user_organization_response in zip(user_organizations, created_user_organizations_response):
         compare_object_fields(user_organization, created_user_organization_response)
 
