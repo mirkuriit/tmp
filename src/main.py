@@ -3,8 +3,6 @@ from contextlib import asynccontextmanager
 import redis.asyncio as redis
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
