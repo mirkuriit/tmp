@@ -96,12 +96,12 @@ async def test_get_user(
         service: UserService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = service.get_one_cache_key(created_user_response.id)
+    cache_key = cache_client.get_one_cache_key(created_user_response.id, "user")
     await cache_client.delete(cache_key)
-    assert await cache_client.get(cache_key, UserResponse) is None
+    assert await cache_client.get_response(cache_key, UserResponse) is None
 
     user = await service.get_one(created_user_response.id)
-    cached_user = await cache_client.get(cache_key, UserResponse)
+    cached_user = await cache_client.get_response(cache_key, UserResponse)
     assert cached_user is not None
     assert cached_user == user
     compare_object_fields(
@@ -118,12 +118,12 @@ async def test_get_many_users(
         cache_client: CacheClient,
 ) -> None:
     limit = 10
-    cache_key = service.get_many_cache_key(None, None, limit)
+    cache_key = await cache_client.get_many_cache_key("users", None, None, limit)
     await cache_client.delete(cache_key)
-    assert await cache_client.get(cache_key, PaginatedUserResponse) is None
+    assert await cache_client.get_response(cache_key, PaginatedUserResponse) is None
 
     users = await service.get_many(None, None, limit)
-    cached_users = await cache_client.get(cache_key, PaginatedUserResponse)
+    cached_users = await cache_client.get_response(cache_key, PaginatedUserResponse)
     assert cached_users is not None
     assert cached_users == users
     for user in users.items:
@@ -140,9 +140,9 @@ async def test_update_user(
         service: UserService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = service.get_one_cache_key(created_user_response.id)
+    cache_key = cache_client.get_one_cache_key(created_user_response.id, "user")
     await service.get_one(created_user_response.id)
-    assert await cache_client.get(cache_key, UserResponse) is not None
+    assert await cache_client.get_response(cache_key, UserResponse) is not None
 
     await service.update(created_user_response.id, update_user_instance)
     user = await repository.get_one_or_none(created_user_response.id)

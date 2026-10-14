@@ -28,18 +28,6 @@ class UserService:
         self._user_organization_service = user_organization_service
         self._cache_client = cache_client
 
-    @staticmethod
-    def get_one_cache_key(user_id: UUID) -> str:
-        return f"user:{user_id}"
-
-    @staticmethod
-    def get_many_cache_key(
-            show_after_datetime: dt.datetime | None,
-            show_after_id: UUID | None,
-            limit: int
-    ) -> str:
-        return f"users:{show_after_id}:{show_after_datetime}:{limit}"
-
     async def _get_one(
             self,
             user_id: UUID,
@@ -56,20 +44,24 @@ class UserService:
         return user
 
     async def get_one(self, user_id: UUID) -> UserResponse:
-        cache_key = self.get_one_cache_key(user_id)
-        user = await self._cache_client.get(cache_key, UserResponse)
+        cache_key = self._cache_client.get_one_cache_key(user_id, "user")
+        user = await self._cache_client.get_response(cache_key, UserResponse)
         if not user:
             user = await self._get_one(user_id)
             user = self._mapper.model_to_schema(user)
-            await self._cache_client.set(cache_key, user)
+            await self._cache_client.set_response(cache_key, user)
         return user
 
     async def get_many(self, show_after_datetime: dt.datetime | None,
                        show_after_id: UUID | None,
                        limit: int) -> PaginatedUserResponse:
-        cache_key = self.get_many_cache_key(show_after_datetime, show_after_id,
-                                            limit)
-        users = await self._cache_client.get(
+        cache_key = await self._cache_client.get_many_cache_key(
+            "users",
+            show_after_datetime,
+            show_after_id,
+            limit
+        )
+        users = await self._cache_client.get_response(
             cache_key,
             PaginatedUserResponse
         )
@@ -84,7 +76,7 @@ class UserService:
                     detail="Users not found",
                 )
             users = self._mapper.models_to_pagination_schema(users)
-            await self._cache_client.set(cache_key, users)
+            await self._cache_client.set_response(cache_key, users)
         return users
 
     async def create(self, data: UserCreate) -> UserResponse:
@@ -103,6 +95,7 @@ class UserService:
                 organizations=organizations,
             )
         await self._repository.refresh(user)
+        await self._cache_client.update_get_many_cache_key_version("users")
         return self._mapper.model_to_schema(user)
 
     async def update(self, user_id: UUID,
@@ -124,8 +117,9 @@ class UserService:
                 user.organizations, data.organizations
             )
         user_response = self._mapper.model_to_schema(user)
-        await self._cache_client.set(self.get_one_cache_key(user_id),
-                                     user_response)
+        cache_key = self._cache_client.get_one_cache_key(user_id, "user")
+        await self._cache_client.set_response(cache_key, user_response)
+        await self._cache_client.update_get_many_cache_key_version("users")
         return user_response
 
     async def delete(
@@ -144,4 +138,7 @@ class UserService:
                 user_id,
                 [organization.id for organization in user.organizations]
             )
-        await self._cache_client.delete(f"user:{user_id}")
+        await self._cache_client.delete(
+            self._cache_client.get_one_cache_key(user_id, "user")
+        )
+        await self._cache_client.update_get_many_cache_key_version("users")

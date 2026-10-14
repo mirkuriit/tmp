@@ -101,12 +101,12 @@ async def test_get_event(
         service: EventService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = service.get_one_cache_key(created_event_response.id)
+    cache_key = cache_client.get_one_cache_key(created_event_response.id, "event")
     await cache_client.delete(cache_key)
-    assert await cache_client.get(cache_key, EventResponse) is None
+    assert await cache_client.get_response(cache_key, EventResponse) is None
 
     event = await service.get_one(created_event_response.id)
-    cached_event = await cache_client.get(cache_key, EventResponse)
+    cached_event = await cache_client.get_response(cache_key, EventResponse)
     assert cached_event is not None
     assert cached_event == event
     compare_object_fields(
@@ -123,12 +123,12 @@ async def test_get_many_events(
         cache_client: CacheClient,
 ) -> None:
     limit = 10
-    cache_key = service.get_many_cache_key(None, None, limit)
+    cache_key = await cache_client.get_many_cache_key("events", None, None, limit)
     await cache_client.delete(cache_key)
-    assert await cache_client.get(cache_key, PaginatedEventResponse) is None
+    assert await cache_client.get_response(cache_key, PaginatedEventResponse) is None
 
     events = await service.get_many(None, None, limit)
-    cached_events = await cache_client.get(cache_key, PaginatedEventResponse)
+    cached_events = await cache_client.get_response(cache_key, PaginatedEventResponse)
     assert cached_events is not None
     assert cached_events == events
 
@@ -140,9 +140,9 @@ async def test_update_event(
         service: EventService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = service.get_one_cache_key(created_event_response.id)
+    cache_key = cache_client.get_one_cache_key(created_event_response.id, "event")
     await service.get_one(created_event_response.id)
-    assert await cache_client.get(cache_key, EventResponse) is not None
+    assert await cache_client.get_response(cache_key, EventResponse) is not None
 
     await service.update(created_event_response.id, update_event_instance)
 

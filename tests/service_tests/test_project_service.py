@@ -86,12 +86,12 @@ async def test_get_project(
         service: ProjectService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = service.get_one_cache_key(created_project_response.id)
+    cache_key = cache_client.get_one_cache_key(created_project_response.id, "project")
     await cache_client.delete(cache_key)
-    assert await cache_client.get(cache_key, ProjectResponse) is None
+    assert await cache_client.get_response(cache_key, ProjectResponse) is None
 
     project = await service.get_one(created_project_response.id)
-    cached_project = await cache_client.get(cache_key, ProjectResponse)
+    cached_project = await cache_client.get_response(cache_key, ProjectResponse)
     assert cached_project is not None
     assert cached_project == project
     compare_object_fields(
@@ -105,12 +105,12 @@ async def test_get_many_projects(
         cache_client: CacheClient,
 ) -> None:
     limit = 10
-    cache_key = service.get_many_cache_key(None, None, limit)
+    cache_key = await cache_client.get_many_cache_key("projects", None, None, limit)
     await cache_client.delete(cache_key)
-    assert await cache_client.get(cache_key, PaginatedProjectResponse) is None
+    assert await cache_client.get_response(cache_key, PaginatedProjectResponse) is None
 
     projects = await service.get_many(None, None, limit)
-    cached_projects = await cache_client.get(cache_key, PaginatedProjectResponse)
+    cached_projects = await cache_client.get_response(cache_key, PaginatedProjectResponse)
     assert cached_projects is not None
     assert cached_projects == projects
 
@@ -122,9 +122,9 @@ async def test_update_project(
         service: ProjectService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = service.get_one_cache_key(created_project_response.id)
+    cache_key = cache_client.get_one_cache_key(created_project_response.id, "project")
     await service.get_one(created_project_response.id)
-    assert await cache_client.get(cache_key, ProjectResponse) is not None
+    assert await cache_client.get_response(cache_key, ProjectResponse) is not None
 
     await service.update(created_project_response.id, update_project_instance)
     project = await repository.get_one_or_none(created_project_response.id)
