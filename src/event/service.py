@@ -83,7 +83,7 @@ class EventService:
                 status_code=HTTP_409_CONFLICT,
                 detail=ex.detail
             )
-
+        await self._cache_client.update_get_many_cache_key_version("events")
         return self._mapper.model_to_schema(event)
 
     async def update(
