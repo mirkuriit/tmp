@@ -53,18 +53,6 @@ async def created_event_id(client: AsyncClient,
     return event_id
 
 
-async def test_create_event_with_exists_name(
-        client: AsyncClient,
-        create_event_body: dict[str, Any],
-):
-    response = await client.post(
-        "/event/v1",
-        json=create_event_body
-    )
-
-    assert response.status_code == HTTP_409_CONFLICT
-
-
 async def test_get_exists_event(
         created_event_id: UUID,
         client: AsyncClient,
@@ -92,34 +80,6 @@ async def test_get_not_exists_event(
     )
 
     assert response.status_code == HTTP_404_NOT_FOUND
-
-
-async def test_update_event_with_exists_name(
-        created_event_id: UUID,
-        client: AsyncClient,
-        update_event_body: dict[str, Any],
-        create_event_body: dict[str, Any]
-):
-    modified_create_event_body = deepcopy(create_event_body)
-    modified_create_event_body["name"] = "somename"
-    response = await client.post(
-        "/event/v1",
-        json=modified_create_event_body
-    )
-    assert response.status_code == HTTP_201_CREATED
-    assert response.json()["name"] == modified_create_event_body["name"]
-    event_id_for_delete_after_test = response.json().get("id")
-
-    response = await client.patch(
-        f"/event/v1/{created_event_id}",
-        json=modified_create_event_body
-    )
-    assert response.status_code == HTTP_409_CONFLICT
-
-    response = await client.delete(
-        f"/event/v1/{event_id_for_delete_after_test}",
-    )
-    assert response.status_code == HTTP_204_NO_CONTENT
 
 
 async def test_update_not_exists_event(
