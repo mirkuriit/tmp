@@ -99,8 +99,9 @@ class EventService:
                 status_code=HTTP_409_CONFLICT,
                 detail=ex.detail
             )
-        await self._cache_client.delete(f"event:{event_id}")
-        return self._mapper.model_to_schema(event)
+        event_response = self._mapper.model_to_schema(event)
+        await self._cache_client.set(f"event:{event_id}", event_response)
+        return event_response
 
     async def delete(
             self,

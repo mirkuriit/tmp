@@ -107,8 +107,9 @@ class UserService:
             await self._organization_service.update_many(
                 user.organizations, data.organizations
             )
-        await self._cache_client.delete(f"user:{user_id}")
-        return self._mapper.model_to_schema(user)
+        user_response = self._mapper.model_to_schema(user)
+        await self._cache_client.set(f"user:{user_id}", user_response)
+        return user_response
 
     async def delete(
             self,

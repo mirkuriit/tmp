@@ -127,7 +127,6 @@ async def test_update_project(
     assert await cache_client.get(cache_key, ProjectResponse) is not None
 
     await service.update(created_project_response.id, update_project_instance)
-    assert await cache_client.get(cache_key, ProjectResponse) is None
     project = await repository.get_one_or_none(created_project_response.id)
     compare_object_fields(
         project, update_project_instance, exclude={"llm_models"}

@@ -145,7 +145,6 @@ async def test_update_user(
     assert await cache_client.get(cache_key, UserResponse) is not None
 
     await service.update(created_user_response.id, update_user_instance)
-    assert await cache_client.get(cache_key, UserResponse) is None
     user = await repository.get_one_or_none(created_user_response.id)
     compare_object_fields(
         user, update_user_instance, exclude={"organizations"}

@@ -145,7 +145,6 @@ async def test_update_event(
     assert await cache_client.get(cache_key, EventResponse) is not None
 
     await service.update(created_event_response.id, update_event_instance)
-    assert await cache_client.get(cache_key, EventResponse) is None
 
     event = await repository.get_one_or_none(created_event_response.id)
     compare_object_fields(

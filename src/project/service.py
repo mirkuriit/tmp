@@ -69,9 +69,9 @@ class ProjectService:
     async def update(self, project_id: UUID, data: ProjectUpdate) -> ProjectResponse:
         project = await self._get_one(project_id)
         await self._repository.update(project, data)
-        await self._cache_client.delete(f"project:{project_id}")
-        return self._mapper.model_to_schema(project)
-    
+        project_response = self._mapper.model_to_schema(project)
+        await self._cache_client.set(f"project:{project_id}", project_response)
+        return project_response
     
     async def delete(
             self,
