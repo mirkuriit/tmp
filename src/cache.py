@@ -8,9 +8,9 @@ from starlette.requests import Request
 T = TypeVar("T", bound=BaseModel)
 
 class CacheClient:
-    DEFAULT_KEY_TTL = 30
-    def __init__(self, client: redis.Redis):
+    def __init__(self, client: redis.Redis, default_cache_key_ttl: int):
         self._client = client
+        self.default_cache_key_ttl = default_cache_key_ttl
 
     async def get(self, key: str, model: type[T]) -> T | None:
         result = await self._client.get(key)
@@ -28,7 +28,7 @@ class CacheClient:
         return await self._client.set(
             key,
             data.model_dump_json(),
-            ex=self.DEFAULT_KEY_TTL
+            ex=self.default_cache_key_ttl
         )
 
     async def delete(self, key: str):

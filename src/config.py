@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     postgres_url: str
     redis_url: str
     log_level: str
+    default_cache_key_ttl: int
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR /".env",

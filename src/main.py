@@ -20,26 +20,29 @@ from src.project.v1.router import router as project_router_v1
 from src.user.v1.router import router as user_router_v1
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    redis_client = redis.Redis.from_url(app.state.settings.redis_url, decode_responses=True)
-    app.state.cache_client = CacheClient(redis_client)
+def make_lifespan(settings: Settings):
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        redis_client = redis.Redis.from_url(
+            settings.redis_url,
+            decode_responses=True
+        )
+        app.state.cache_client = CacheClient(
+            client=redis_client,
+            default_cache_key_ttl=settings.default_cache_key_ttl,
+        )
 
-    engine: AsyncEngine = create_async_engine(
-        app.state.settings.postgres_url,
-        pool_pre_ping=True,
-    )
-    SessionFactory = async_sessionmaker(
-        bind=engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-    )
-    app.state.db_engine = engine
-    app.state.SessionFactory = SessionFactory
+        engine = create_async_engine(settings.postgres_url, pool_pre_ping=True)
+        app.state.db_engine = engine
+        app.state.SessionFactory = async_sessionmaker(engine, expire_on_commit=False)
 
-    yield
-    await redis_client.aclose()
+        try:
+            yield
+        finally:
+            await redis_client.aclose()
+            await engine.dispose()
 
+    return lifespan
 
 def add_routers(app: FastAPI) -> None:
     app.include_router(healthcheck_router)
@@ -63,7 +66,7 @@ def get_app(settings: Settings) -> FastAPI:
         docs_url='/docs',
         openapi_url='/openapi.json',
         default_response_class=JSONResponse,
-        lifespan=lifespan
+        lifespan=make_lifespan(settings),
     )
     app.state.settings = settings
 
