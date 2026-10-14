@@ -86,7 +86,7 @@ async def test_get_project(
         service: ProjectService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = f"project:{created_project_response.id}"
+    cache_key = service.get_one_cache_key(created_project_response.id)
     await cache_client.delete(cache_key)
     assert await cache_client.get(cache_key, ProjectResponse) is None
 
@@ -105,7 +105,7 @@ async def test_get_many_projects(
         cache_client: CacheClient,
 ) -> None:
     limit = 10
-    cache_key = f"projects:{None}:{None}:{limit}"
+    cache_key = service.get_many_cache_key(None, None, limit)
     await cache_client.delete(cache_key)
     assert await cache_client.get(cache_key, PaginatedProjectResponse) is None
 
@@ -122,7 +122,7 @@ async def test_update_project(
         service: ProjectService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = f"project:{created_project_response.id}"
+    cache_key = service.get_one_cache_key(created_project_response.id)
     await service.get_one(created_project_response.id)
     assert await cache_client.get(cache_key, ProjectResponse) is not None
 

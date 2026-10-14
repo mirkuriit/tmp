@@ -21,6 +21,19 @@ class ProjectService:
         self._repository = repository
         self._cache_client = cache_client
 
+    @staticmethod
+    def get_one_cache_key(project_id: UUID) -> str:
+        return f"project:{project_id}"
+
+
+    @staticmethod
+    def get_many_cache_key(
+            show_after_datetime: dt.datetime | None,
+            show_after_id: UUID | None,
+            limit: int
+    ) -> str:
+        return f"projects:{show_after_id}:{show_after_datetime}:{limit}"
+
 
     async def _get_one(
             self,
@@ -39,7 +52,7 @@ class ProjectService:
 
 
     async def get_one(self, project_id: UUID) -> ProjectResponse:
-        cache_key = f"project:{project_id}"
+        cache_key = self.get_one_cache_key(project_id)
         project = await self._cache_client.get(cache_key, ProjectResponse)
         if not project:
             project = await self._get_one(project_id)
@@ -48,7 +61,7 @@ class ProjectService:
         return project
 
     async def get_many(self, show_after_datetime: dt.datetime | None, show_after_id: UUID | None, limit: int) -> PaginatedProjectResponse:
-        cache_key = f"projects:{show_after_id}:{show_after_datetime}:{limit}"
+        cache_key = self.get_many_cache_key(show_after_datetime, show_after_id, limit)
         projects = await self._cache_client.get(cache_key, PaginatedProjectResponse)
         if not projects:
             projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
@@ -70,7 +83,7 @@ class ProjectService:
         project = await self._get_one(project_id)
         await self._repository.update(project, data)
         project_response = self._mapper.model_to_schema(project)
-        await self._cache_client.set(f"project:{project_id}", project_response)
+        await self._cache_client.set(self.get_one_cache_key(project_id), project_response)
         return project_response
     
     async def delete(

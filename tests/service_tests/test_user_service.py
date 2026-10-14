@@ -96,7 +96,7 @@ async def test_get_user(
         service: UserService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = f"user:{created_user_response.id}"
+    cache_key = service.get_one_cache_key(created_user_response.id)
     await cache_client.delete(cache_key)
     assert await cache_client.get(cache_key, UserResponse) is None
 
@@ -118,7 +118,7 @@ async def test_get_many_users(
         cache_client: CacheClient,
 ) -> None:
     limit = 10
-    cache_key = f"users:{None}:{None}:{limit}"
+    cache_key = service.get_many_cache_key(None, None, limit)
     await cache_client.delete(cache_key)
     assert await cache_client.get(cache_key, PaginatedUserResponse) is None
 
@@ -140,7 +140,7 @@ async def test_update_user(
         service: UserService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = f"user:{created_user_response.id}"
+    cache_key = service.get_one_cache_key(created_user_response.id)
     await service.get_one(created_user_response.id)
     assert await cache_client.get(cache_key, UserResponse) is not None
 

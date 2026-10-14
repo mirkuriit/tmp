@@ -28,6 +28,19 @@ class EventService:
         self._repository = repository
         self._cache_client = cache_client
 
+    @staticmethod
+    def get_one_cache_key(event_id: UUID) -> str:
+        return f"event:{event_id}"
+
+
+    @staticmethod
+    def get_many_cache_key(
+            show_after_datetime: dt.datetime | None,
+            show_after_id: UUID | None,
+            limit: int
+    ) -> str:
+        return f"events:{show_after_id}:{show_after_datetime}:{limit}"
+
     async def _get_one(
             self,
             event_id: UUID,
@@ -44,7 +57,7 @@ class EventService:
         return event
 
     async def get_one(self, event_id: UUID) -> EventResponse:
-        cache_key = f"event:{event_id}"
+        cache_key = self.get_one_cache_key(event_id)
         event = await self._cache_client.get(cache_key, EventResponse)
         if not event:
             event = await self._get_one(event_id)
@@ -58,7 +71,7 @@ class EventService:
             show_after_id: UUID | None,
             limit: int
     ) -> PaginatedEventResponse:
-        cache_key = f"events:{show_after_id}:{show_after_datetime}:{limit}"
+        cache_key = self.get_many_cache_key(show_after_datetime, show_after_id, limit)
         events = await self._cache_client.get(cache_key, PaginatedEventResponse)
         if not events:
             models = await self._repository.get_many(
@@ -100,7 +113,7 @@ class EventService:
                 detail=ex.detail
             )
         event_response = self._mapper.model_to_schema(event)
-        await self._cache_client.set(f"event:{event_id}", event_response)
+        await self._cache_client.set(self.get_one_cache_key(event_id), event_response)
         return event_response
 
     async def delete(

@@ -101,7 +101,7 @@ async def test_get_event(
         service: EventService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = f"event:{created_event_response.id}"
+    cache_key = service.get_one_cache_key(created_event_response.id)
     await cache_client.delete(cache_key)
     assert await cache_client.get(cache_key, EventResponse) is None
 
@@ -123,7 +123,7 @@ async def test_get_many_events(
         cache_client: CacheClient,
 ) -> None:
     limit = 10
-    cache_key = f"events:{None}:{None}:{limit}"
+    cache_key = service.get_many_cache_key(None, None, limit)
     await cache_client.delete(cache_key)
     assert await cache_client.get(cache_key, PaginatedEventResponse) is None
 
@@ -140,7 +140,7 @@ async def test_update_event(
         service: EventService,
         cache_client: CacheClient,
 ) -> None:
-    cache_key = f"event:{created_event_response.id}"
+    cache_key = service.get_one_cache_key(created_event_response.id)
     await service.get_one(created_event_response.id)
     assert await cache_client.get(cache_key, EventResponse) is not None
 

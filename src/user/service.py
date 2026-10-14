@@ -8,7 +8,8 @@ from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user.repository import UserRepository
-from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
+from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, \
+    UserUpdate
 from src.user_organizations.service import UserOrganizationService
 
 
@@ -27,6 +28,17 @@ class UserService:
         self._user_organization_service = user_organization_service
         self._cache_client = cache_client
 
+    @staticmethod
+    def get_one_cache_key(user_id: UUID) -> str:
+        return f"user:{user_id}"
+
+    @staticmethod
+    def get_many_cache_key(
+            show_after_datetime: dt.datetime | None,
+            show_after_id: UUID | None,
+            limit: int
+    ) -> str:
+        return f"users:{show_after_id}:{show_after_datetime}:{limit}"
 
     async def _get_one(
             self,
@@ -44,7 +56,7 @@ class UserService:
         return user
 
     async def get_one(self, user_id: UUID) -> UserResponse:
-        cache_key = f"user:{user_id}"
+        cache_key = self.get_one_cache_key(user_id)
         user = await self._cache_client.get(cache_key, UserResponse)
         if not user:
             user = await self._get_one(user_id)
@@ -53,8 +65,10 @@ class UserService:
         return user
 
     async def get_many(self, show_after_datetime: dt.datetime | None,
-                       show_after_id: UUID | None, limit: int) -> PaginatedUserResponse:
-        cache_key = f"users:{show_after_id}:{show_after_datetime}:{limit}"
+                       show_after_id: UUID | None,
+                       limit: int) -> PaginatedUserResponse:
+        cache_key = self.get_many_cache_key(show_after_datetime, show_after_id,
+                                            limit)
         users = await self._cache_client.get(
             cache_key,
             PaginatedUserResponse
@@ -82,7 +96,8 @@ class UserService:
                 detail="Same unique field already exists"
             )
         if data.organizations:
-            organizations = await self._organization_service.create_many(data.organizations)
+            organizations = await self._organization_service.create_many(
+                data.organizations)
             await self._user_organization_service.create_many(
                 user_id=user.id,
                 organizations=organizations,
@@ -90,12 +105,13 @@ class UserService:
         await self._repository.refresh(user)
         return self._mapper.model_to_schema(user)
 
-
     async def update(self, user_id: UUID,
                      data: UserUpdate) -> UserResponse:
         if data.username:
-            await self._repository.get_advisory_lock(f"{User.__tablename__}:{data.username}")
-            checked_user = await self._repository.get_many(limit=1, filters=[User.username == data.username, User.id != user_id])
+            await self._repository.get_advisory_lock(
+                f"{User.__tablename__}:{data.username}")
+            checked_user = await self._repository.get_many(limit=1, filters=[
+                User.username == data.username, User.id != user_id])
             if checked_user:
                 raise ResourceExistsException(
                     detail="User with same username exists",
@@ -108,7 +124,8 @@ class UserService:
                 user.organizations, data.organizations
             )
         user_response = self._mapper.model_to_schema(user)
-        await self._cache_client.set(f"user:{user_id}", user_response)
+        await self._cache_client.set(self.get_one_cache_key(user_id),
+                                     user_response)
         return user_response
 
     async def delete(
@@ -118,7 +135,8 @@ class UserService:
     ) -> None:
         if user_id and organization_id:
             await self._organization_service.delete_many([organization_id])
-            await self._user_organization_service.delete_many(user_id, [organization_id])
+            await self._user_organization_service.delete_many(user_id,
+                                                              [organization_id])
         elif user_id:
             user = await self._get_one(user_id)
             await self._repository.delete(user)
