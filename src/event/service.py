@@ -74,15 +74,9 @@ class EventService:
         return events
 
     async def create(self, data: EventCreate) -> EventResponse:
-        try:
-            event = await self._repository.create(
-                self._mapper.schema_to_model(data)
-            )
-        except DuplicateFieldException as ex:
-            raise HTTPException(
-                status_code=HTTP_409_CONFLICT,
-                detail=ex.detail
-            )
+        event = await self._repository.create(
+            self._mapper.schema_to_model(data)
+        )
         await self._cache_client.update_get_many_cache_key_version("events")
         return self._mapper.model_to_schema(event)
 

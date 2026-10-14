@@ -60,15 +60,9 @@ class EventRepository:
 
 
     async def create(self, event: Event) -> Event:
-        try:
-            self._session.add(event)
-            await self._session.flush()
-            return event
-        except IntegrityError as ex:
-            constraint = getattr(ex.orig.__cause__, "constraint_name", None)
-            if constraint == "events_name_key":
-                raise DuplicateFieldException(detail=f"Event with name '{event.name}' already exists") from ex
-            raise
+        self._session.add(event)
+        await self._session.flush()
+        return event
 
 
     async def update(self, event: Event, updated_schema: EventUpdate) -> Event:
