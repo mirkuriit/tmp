@@ -65,6 +65,10 @@ class EventService:
                 show_after_datetime,
                 show_after_id, limit
             )
+            if not models:
+                raise NotFoundException(
+                    detail="Events not found"
+                )
             events = self._mapper.models_to_pagination_schema(models)
             await self._cache_client.set(cache_key, events)
         return events

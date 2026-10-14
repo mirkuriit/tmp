@@ -65,6 +65,10 @@ class UserService:
                 show_after_datetime=show_after_datetime,
                 show_after_id=show_after_id,
             )
+            if not users:
+                raise NotFoundException(
+                    detail="Users not found",
+                )
             users = self._mapper.models_to_pagination_schema(users)
             await self._cache_client.set(cache_key, users)
         return users

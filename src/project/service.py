@@ -52,6 +52,10 @@ class ProjectService:
         projects = await self._cache_client.get(cache_key, PaginatedProjectResponse)
         if not projects:
             projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
+            if not projects:
+                raise NotFoundException(
+                    detail="Projects not found"
+                )
             projects = self._mapper.models_to_pagination_schema(projects)
             await self._cache_client.set(cache_key, projects)
         return projects

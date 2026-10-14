@@ -20,12 +20,6 @@ class UserMapper:
 
     @staticmethod
     def models_to_pagination_schema(users: Sequence[User]) -> PaginatedUserResponse:
-        if not users:
-            return PaginatedUserResponse(
-                items=users,
-                last_seen_id=None,
-                last_seen_datetime=None
-            )
         return PaginatedUserResponse(
             items=[UserResponse.model_validate(user) for user in users],
             last_seen_id=users[-1].id,
