@@ -5,8 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.organization.mapper import OrganizationMapper
 from src.organization.repository import OrganizationRepository
 from src.organization.service import OrganizationService
-from src.user.repository import UserRepository, UserRepositoryFactory
-from src.user.service_factory import UserServiceFactory
+from src.user.factories import UserRepositoryFactory, UserServiceFactory
 from src.user_organizations.repository import UserOrganizationRepository
 from src.user_organizations.service import UserOrganizationService
 

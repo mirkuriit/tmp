@@ -101,9 +101,3 @@ class UserRepository:
         await self._session.flush()
         return user
 
-
-class UserRepositoryFactory:
-    @staticmethod
-    def user_repository(session: AsyncSession) -> UserRepository:
-        return  UserRepository(session)
-

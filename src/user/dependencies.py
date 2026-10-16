@@ -4,10 +4,9 @@ from fastapi import Depends
 from starlette.requests import Request
 
 from src.cache import CacheClient, get_cache_client
+from src.user.factories import UserRepositoryFactory, UserServiceFactory
 from src.user.mapper import UserMapper
-from src.user.repository import UserRepositoryFactory
 from src.user.service import UserService
-from src.user.service_factory import UserServiceFactory
 from src.user.unit_of_work import UserUOW
 
 

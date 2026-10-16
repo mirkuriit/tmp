@@ -3,9 +3,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.organization.mapper import OrganizationMapper
 from src.organization.repository import OrganizationRepository
 from src.organization.service import OrganizationService
+from src.user.repository import UserRepository
 from src.user_organizations.mapper import UserOrganizationMapper
 from src.user_organizations.repository import UserOrganizationRepository
 from src.user_organizations.service import UserOrganizationService
+
+
+class UserRepositoryFactory:
+    @staticmethod
+    def user_repository(session: AsyncSession) -> UserRepository:
+        return UserRepository(session)
 
 
 class UserServiceFactory:
