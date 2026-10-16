@@ -13,20 +13,22 @@ from src.project.schema import (
     ProjectResponse,
     ProjectUpdate,
 )
+from src.project.unit_of_work import ProjectUOW
 
 
 class ProjectService:
-    def __init__(self, repository: ProjectRepository, mapper: ProjectMapper, cache_client: CacheClient) -> None:
+    def __init__(self, mapper: ProjectMapper, cache_client: CacheClient, ouw: ProjectUOW) -> None:
         self._mapper = mapper
-        self._repository = repository
         self._cache_client = cache_client
+        self._ouw = ouw
 
 
     async def _get_one(
             self,
+            uow: ProjectUOW,
             project_id: UUID,
     ) -> Project:
-        project = await self._repository.get_one_or_none(project_id)
+        project = await uow.repository.get_one_or_none(project_id)
         if project is None:
             detail = f"Project with id: {project_id} not found"
             exception = NotFoundException(detail=detail)
@@ -42,7 +44,8 @@ class ProjectService:
         cache_key = self._cache_client.get_one_cache_key(project_id, "project")
         project = await self._cache_client.get_response(cache_key, ProjectResponse)
         if not project:
-            project = await self._get_one(project_id)
+            async with self._ouw as uow:
+                project = await self._get_one(uow, project_id)
             project = self._mapper.model_to_schema(project)
             await self._cache_client.set_response(cache_key, project)
         return project
@@ -51,25 +54,28 @@ class ProjectService:
         cache_key = await self._cache_client.get_many_cache_key("projects", show_after_datetime, show_after_id, limit)
         projects = await self._cache_client.get_response(cache_key, PaginatedProjectResponse)
         if not projects:
-            projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
-            if not projects:
-                raise NotFoundException(
-                    detail="Projects not found"
-                )
+            async with self._ouw as uow:
+                projects = await uow.repository.get_many(show_after_datetime, show_after_id, limit)
+                if not projects:
+                    raise NotFoundException(
+                        detail="Projects not found"
+                    )
             projects = self._mapper.models_to_pagination_schema(projects)
             await self._cache_client.set_response(cache_key, projects)
         return projects
 
 
     async def create(self, data: ProjectCreate) -> ProjectResponse:
-        project = await self._repository.create(self._mapper.schema_to_model(data))
+        async with self._ouw as uow:
+            project = await uow.repository.create(self._mapper.schema_to_model(data))
         await self._cache_client.update_get_many_cache_key_version("projects")
         return self._mapper.model_to_schema(project)
 
 
     async def update(self, project_id: UUID, data: ProjectUpdate) -> ProjectResponse:
-        project = await self._get_one(project_id)
-        await self._repository.update(project, data)
+        async with self._ouw as uow:
+            project = await self._get_one(uow, project_id)
+            await uow.repository.update(project, data)
         project_response = self._mapper.model_to_schema(project)
         await self._cache_client.set_response(
             self._cache_client.get_one_cache_key(project_id, "project"),
@@ -83,8 +89,9 @@ class ProjectService:
             project_id: UUID,
             llm_model_id: UUID | None = None
     ) -> ProjectResponse:
-        project = await self._get_one(project_id)
-        deleted_project = await self._repository.delete(project, llm_model_id)
+        async with self._ouw as uow:
+            project = await self._get_one(uow, project_id)
+            deleted_project = await uow.repository.delete(project, llm_model_id)
         await self._cache_client.delete(self._cache_client.get_one_cache_key(project_id, "project"))
         await self._cache_client.update_get_many_cache_key_version("projects")
         return self._mapper.model_to_schema(deleted_project)
