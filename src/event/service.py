@@ -14,25 +14,28 @@ from src.event.schema import (
     EventUpdate,
     PaginatedEventResponse,
 )
+from src.event.unit_of_work import EventUOW
 from src.exceptions import DuplicateFieldException, NotFoundException
 from src.logger import logger
 
 
 class EventService:
     def __init__(
-            self, repository: EventRepository,
+            self,
             mapper: EventMapper,
-            cache_client: CacheClient
+            cache_client: CacheClient,
+            uow: EventUOW
     ) -> None:
         self._mapper = mapper
-        self._repository = repository
         self._cache_client = cache_client
+        self._uow = uow
 
     async def _get_one(
             self,
+            uow: EventUOW,
             event_id: UUID,
     ) -> Event:
-        event = await self._repository.get_one_or_none(event_id)
+        event = await uow.repository.get_one_or_none(event_id)
         if event is None:
             detail = f"Event with id: {event_id} not found"
             exception = NotFoundException(detail=detail)
@@ -47,7 +50,8 @@ class EventService:
         cache_key = self._cache_client.get_one_cache_key(event_id, "event")
         event = await self._cache_client.get_response(cache_key, EventResponse)
         if not event:
-            event = await self._get_one(event_id)
+            async with self._uow as uow:
+                event = await self._get_one(uow, event_id)
             event = self._mapper.model_to_schema(event)
             await self._cache_client.set_response(cache_key, event)
         return event
@@ -61,10 +65,11 @@ class EventService:
         cache_key = await self._cache_client.get_many_cache_key("events", show_after_datetime, show_after_id, limit)
         events = await self._cache_client.get_response(cache_key, PaginatedEventResponse)
         if not events:
-            models = await self._repository.get_many(
-                show_after_datetime,
-                show_after_id, limit
-            )
+            async with self._uow as uow:
+                models = await uow.repository.get_many(
+                    show_after_datetime,
+                    show_after_id, limit
+                )
             if not models:
                 raise NotFoundException(
                     detail="Events not found"
@@ -74,9 +79,10 @@ class EventService:
         return events
 
     async def create(self, data: EventCreate) -> EventResponse:
-        event = await self._repository.create(
-            self._mapper.schema_to_model(data)
-        )
+        async with self._uow as uow:
+            event = await uow.repository.create(
+                self._mapper.schema_to_model(data)
+            )
         await self._cache_client.update_get_many_cache_key_version("events")
         return self._mapper.model_to_schema(event)
 
@@ -85,14 +91,15 @@ class EventService:
             event_id: UUID,
             data: EventUpdate
     ) -> EventResponse:
-        event = await self._get_one(event_id)
-        try:
-            await self._repository.update(event, data)
-        except DuplicateFieldException as ex:
-            raise HTTPException(
-                status_code=HTTP_409_CONFLICT,
-                detail=ex.detail
-            )
+        async with self._uow as uow:
+            event = await self._get_one(uow, event_id)
+            try:
+                await uow.repository.update(event, data)
+            except DuplicateFieldException as ex:
+                raise HTTPException(
+                    status_code=HTTP_409_CONFLICT,
+                    detail=ex.detail
+                )
         event_response = self._mapper.model_to_schema(event)
         await self._cache_client.set_response(self._cache_client.get_one_cache_key(event_id, "event"), event_response)
         await self._cache_client.update_get_many_cache_key_version("events")
@@ -102,8 +109,9 @@ class EventService:
             self,
             event_id: UUID,
     ) -> EventResponse:
-        event = await self._get_one(event_id)
-        deleted_event = await self._repository.delete(event)
+        async with self._uow as uow:
+            event = await self._get_one(uow, event_id)
+            deleted_event = await uow.repository.delete(event)
         await self._cache_client.delete(self._cache_client.get_one_cache_key(event_id, "event"))
         await self._cache_client.update_get_many_cache_key_version("events")
         return self._mapper.model_to_schema(deleted_event)
