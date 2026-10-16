@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
-from src.user.dependencies import get_read_user_service, get_user_service
+from src.user.dependencies import get_user_service
 from src.user.schema import (
    PaginatedUserResponse,
    UserCreate,
@@ -29,7 +29,7 @@ async def create_user(
 
 @router.get("/")
 async def get_users(
-        user_service: Annotated[UserService, Depends(get_read_user_service)],
+        user_service: Annotated[UserService, Depends(get_user_service)],
         show_after_datetime: dt.datetime | None = None,
         show_after_id: UUID | None = None,
         limit: int = 10
@@ -41,7 +41,7 @@ async def get_users(
 @router.get("/{user_id}")
 async def get_user(
         user_id: UUID,
-        user_service: Annotated[UserService, Depends(get_read_user_service)]
+        user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> UserResponse:
    return await user_service.get_one(user_id)
 

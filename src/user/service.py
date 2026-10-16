@@ -1,38 +1,41 @@
 import datetime as dt
 from uuid import UUID
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.cache import CacheClient
 from src.exceptions import NotFoundException, ResourceExistsException
 from src.logger import logger
+from src.organization.mapper import OrganizationMapper
+from src.organization.repository import OrganizationRepository
 from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user.repository import UserRepository
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, \
     UserUpdate
+from src.user.unit_of_work import UserUOW
+from src.user_organizations.repository import UserOrganizationRepository
 from src.user_organizations.service import UserOrganizationService
 
 
 class UserService:
     def __init__(
             self,
-            repository: UserRepository,
             mapper: UserMapper,
-            organization_service: OrganizationService,
-            user_organization_service: UserOrganizationService,
-            cache_client: CacheClient
+            cache_client: CacheClient,
+            uow: UserUOW
     ) -> None:
-        self._repository = repository
         self._mapper = mapper
-        self._organization_service = organization_service
-        self._user_organization_service = user_organization_service
         self._cache_client = cache_client
+        self._uow = uow
 
     async def _get_one(
             self,
+            uow: UserUOW,
             user_id: UUID,
     ) -> User:
-        user = await self._repository.get_one_or_none(user_id)
+        user = await uow.repository.get_one_or_none(user_id)
         if user is None:
             detail = f"User with id: {user_id} not found"
             exception = NotFoundException(detail=detail)
@@ -47,7 +50,8 @@ class UserService:
         cache_key = self._cache_client.get_one_cache_key(user_id, "user")
         user = await self._cache_client.get_response(cache_key, UserResponse)
         if not user:
-            user = await self._get_one(user_id)
+            async with self._uow as uow:
+                user = await self._get_one(uow, user_id)
             user = self._mapper.model_to_schema(user)
             await self._cache_client.set_response(cache_key, user)
         return user
@@ -66,11 +70,12 @@ class UserService:
             PaginatedUserResponse
         )
         if not users:
-            users = await self._repository.get_many(
-                limit=limit,
-                show_after_datetime=show_after_datetime,
-                show_after_id=show_after_id,
-            )
+            async with self._uow as uow:
+                users = await uow.repository.get_many(
+                    limit=limit,
+                    show_after_datetime=show_after_datetime,
+                    show_after_id=show_after_id,
+                )
             if not users:
                 raise NotFoundException(
                     detail="Users not found",
@@ -80,42 +85,44 @@ class UserService:
         return users
 
     async def create(self, data: UserCreate) -> UserResponse:
-        user = await self._repository.create(
-            self._mapper.schema_to_model(data)
-        )
-        if not user:
-            raise ResourceExistsException(
-                detail="Same unique field already exists"
+        async with self._uow as uow:
+            user = await uow.repository.create(
+                self._mapper.schema_to_model(data)
             )
-        if data.organizations:
-            organizations = await self._organization_service.create_many(
-                data.organizations)
-            await self._user_organization_service.create_many(
-                user_id=user.id,
-                organizations=organizations,
-            )
-        await self._repository.refresh(user)
+            if not user:
+                raise ResourceExistsException(
+                    detail="Same unique field already exists"
+                )
+            if data.organizations:
+                organizations = await uow.organization_service.create_many(
+                    data.organizations)
+                await uow.user_organization_service.create_many(
+                    user_id=user.id,
+                    organizations=organizations,
+                )
+            await uow.repository.refresh(user)
         await self._cache_client.update_get_many_cache_key_version("users")
         return self._mapper.model_to_schema(user)
 
     async def update(self, user_id: UUID,
                      data: UserUpdate) -> UserResponse:
-        if data.username:
-            await self._repository.get_advisory_lock(
-                f"{User.__tablename__}:{data.username}")
-            checked_user = await self._repository.get_many(limit=1, filters=[
-                User.username == data.username, User.id != user_id])
-            if checked_user:
-                raise ResourceExistsException(
-                    detail="User with same username exists",
-                )
+        async with self._uow as uow:
+            if data.username:
+                await uow.repository.get_advisory_lock(
+                    f"{User.__tablename__}:{data.username}")
+                checked_user = await uow.repository.get_many(limit=1, filters=[
+                    User.username == data.username, User.id != user_id])
+                if checked_user:
+                    raise ResourceExistsException(
+                        detail="User with same username exists",
+                    )
 
-        user = await self._get_one(user_id)
-        await self._repository.update(user, data)
-        if data.organizations:
-            await self._organization_service.update_many(
-                user.organizations, data.organizations
-            )
+            user = await self._get_one(uow, user_id)
+            await uow.repository.update(user, data)
+            if data.organizations:
+                await uow.organization_service.update_many(
+                    user.organizations, data.organizations
+                )
         user_response = self._mapper.model_to_schema(user)
         cache_key = self._cache_client.get_one_cache_key(user_id, "user")
         await self._cache_client.set_response(cache_key, user_response)
@@ -127,18 +134,19 @@ class UserService:
             user_id: UUID,
             organization_id: UUID | None = None,
     ) -> None:
-        if user_id and organization_id:
-            await self._organization_service.delete_many([organization_id])
-            await self._user_organization_service.delete_many(user_id,
-                                                              [organization_id])
-        elif user_id:
-            user = await self._get_one(user_id)
-            await self._repository.delete(user)
-            await self._user_organization_service.delete_many(
-                user_id,
-                [organization.id for organization in user.organizations]
+        async with self._uow as uow:
+            if user_id and organization_id:
+                await uow.organization_service.delete_many([organization_id])
+                await uow.user_organization_service.delete_many(user_id,
+                                                                  [organization_id])
+            elif user_id:
+                user = await self._get_one(uow, user_id)
+                await uow.repository.delete(user)
+                await uow.user_organization_service.delete_many(
+                    user_id,
+                    [organization.id for organization in user.organizations]
+                )
+            await self._cache_client.delete(
+                self._cache_client.get_one_cache_key(user_id, "user")
             )
-        await self._cache_client.delete(
-            self._cache_client.get_one_cache_key(user_id, "user")
-        )
         await self._cache_client.update_get_many_cache_key_version("users")

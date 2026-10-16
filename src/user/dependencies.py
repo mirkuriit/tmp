@@ -1,56 +1,28 @@
-from collections.abc import Callable
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from src.cache import CacheClient, get_cache_client
-from src.db import get_read_session, get_session
-from src.organization.mapper import OrganizationMapper
-from src.organization.repository import OrganizationRepository
-from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
-from src.user.repository import UserRepository
+from src.user.repository import UserRepositoryFactory
 from src.user.service import UserService
-from src.user_organizations.mapper import UserOrganizationMapper
-from src.user_organizations.repository import UserOrganizationRepository
-from src.user_organizations.service import UserOrganizationService
+from src.user.service_factory import UserServiceFactory
+from src.user.unit_of_work import UserUOW
 
 
-def user_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession, CacheClient], UserService]:
-    def dependency(
-        session: Annotated[AsyncSession, Depends(session_dependency)],
-        cache_client: Annotated[CacheClient, Depends(get_cache_client)]
-    ) -> UserService:
-        user_repository = UserRepository(session)
-        user_mapper = UserMapper()
+def user_service_dependency(request: Request, cache_client: Annotated[CacheClient, Depends(get_cache_client)]) -> UserService:
+    user_mapper = UserMapper()
+    user_cache_client = cache_client
+    user_service_factory = UserServiceFactory()
+    user_repository_factory = UserRepositoryFactory()
+    user_uow = UserUOW(request.app.state.SessionFactory, user_service_factory, user_repository_factory)
 
-        organization_repository = OrganizationRepository(session)
-        organization_mapper = OrganizationMapper()
-        organization_service = OrganizationService(
-            organization_repository,
-            organization_mapper
-        )
-
-        user_organization_repository = UserOrganizationRepository(session)
-        user_organization_mapper = UserOrganizationMapper()
-        user_organization_service = UserOrganizationService(
-            user_organization_repository,
-            user_organization_mapper
-        )
-
-        user_cache_client = cache_client
-
-        return UserService(
-            user_repository,
-            user_mapper,
-            organization_service,
-            user_organization_service,
-            user_cache_client
-        )
-
-    return dependency
+    return UserService(
+        user_mapper,
+        user_cache_client,
+        user_uow
+    )
 
 
-get_read_user_service = user_service_dependency(get_read_session)
-get_user_service = user_service_dependency(get_session)
+get_user_service = user_service_dependency
