@@ -2,10 +2,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.cache import CacheClient
-from src.organization.mapper import OrganizationMapper
-from src.organization.repository import OrganizationRepository
 from src.organization.schema import OrganizationCreate
-from src.organization.service import OrganizationService
+from src.user.factories import UserRepositoryFactory, UserServiceFactory
 from src.user.mapper import UserMapper
 from src.user.repository import UserRepository
 from src.user.schema import (
@@ -15,26 +13,31 @@ from src.user.schema import (
     UserUpdate,
 )
 from src.user.service import UserService
-from src.user_organizations.mapper import UserOrganizationMapper
-from src.user_organizations.repository import UserOrganizationRepository
-from src.user_organizations.service import UserOrganizationService
+from src.user.unit_of_work import UserUOW
 from tests.utils import compare_object_fields
 
 
 @pytest.fixture(scope="session")
-def service(db_session: AsyncSession, cache_client: CacheClient) -> UserService:
+def repository_factory() -> UserRepositoryFactory:
+    return UserRepositoryFactory()
+
+
+@pytest.fixture(scope="session")
+def service_factory() -> UserServiceFactory:
+    return UserServiceFactory()
+
+
+@pytest.fixture(scope="session")
+def service(
+        cache_client: CacheClient,
+        db_session_factory,
+        service_factory: UserServiceFactory,
+        repository_factory: UserRepositoryFactory
+) -> UserService:
     return UserService(
-        UserRepository(db_session),
         UserMapper(),
-        OrganizationService(
-            OrganizationRepository(db_session),
-            OrganizationMapper()
-        ),
-        UserOrganizationService(
-            UserOrganizationRepository(db_session),
-            UserOrganizationMapper()
-        ),
-        cache_client
+        cache_client,
+        UserUOW(db_session_factory, service_factory, repository_factory)
     )
 
 

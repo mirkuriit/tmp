@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.cache import CacheClient
+from src.event.factories import EventRepositoryFactory
 from src.event.mapper import EventMapper
 from src.event.repository import EventRepository
 from src.event.schema import (
@@ -13,16 +14,22 @@ from src.event.schema import (
     PaginatedEventResponse,
 )
 from src.event.service import EventService
+from src.event.unit_of_work import EventUOW
 from src.event_info.schema import EventInfoCreate
 from tests.utils import compare_object_fields
 
 
 @pytest.fixture(scope="session")
-def service(db_session: AsyncSession, cache_client: CacheClient) -> EventService:
+def repository_factory():
+    return EventRepositoryFactory()
+
+
+@pytest.fixture(scope="session")
+def service(cache_client: CacheClient, db_session_factory, repository_factory: EventRepositoryFactory) -> EventService:
     return EventService(
-        EventRepository(db_session),
         EventMapper(),
-        cache_client
+        cache_client,
+        EventUOW(db_session_factory, repository_factory)
     )
 
 

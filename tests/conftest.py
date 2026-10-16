@@ -41,15 +41,21 @@ async def db_engine(postgres_container: PostgresContainer):
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
 
-
 @pytest.fixture(scope="session")
-async def db_session(db_engine: AsyncEngine):
-    session_factory = async_sessionmaker(
+async def db_session_factory(db_engine: AsyncEngine):
+    return async_sessionmaker(
         bind=db_engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    async with session_factory() as session:
+
+
+@pytest.fixture(scope="session")
+async def db_session(
+        db_engine: AsyncEngine,
+        db_session_factory: async_sessionmaker[AsyncSession]
+):
+    async with db_session_factory() as session:
         yield session
 
 
