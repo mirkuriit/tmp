@@ -1,5 +1,5 @@
 import datetime as dt
-from typing import TypeVar, Any
+from typing import Any, TypeVar
 from uuid import UUID
 
 import redis.asyncio as redis

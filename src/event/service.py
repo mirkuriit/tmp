@@ -7,7 +7,6 @@ from starlette.status import HTTP_409_CONFLICT
 from src.cache import CacheClient
 from src.event.mapper import EventMapper
 from src.event.model import Event
-from src.event.repository import EventRepository
 from src.event.schema import (
     EventCreate,
     EventResponse,

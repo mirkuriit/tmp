@@ -1,13 +1,7 @@
 from typing import Self
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.organization.mapper import OrganizationMapper
-from src.organization.repository import OrganizationRepository
-from src.organization.service import OrganizationService
 from src.user.factories import UserRepositoryFactory, UserServiceFactory
-from src.user_organizations.repository import UserOrganizationRepository
-from src.user_organizations.service import UserOrganizationService
+
 
 class UserUOW:
     def __init__(self, session_factory, service_factory: UserServiceFactory, repository_factory: UserRepositoryFactory):

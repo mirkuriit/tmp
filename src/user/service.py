@@ -1,22 +1,13 @@
 import datetime as dt
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.cache import CacheClient
 from src.exceptions import NotFoundException, ResourceExistsException
 from src.logger import logger
-from src.organization.mapper import OrganizationMapper
-from src.organization.repository import OrganizationRepository
-from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
 from src.user.model import User
-from src.user.repository import UserRepository
-from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, \
-    UserUpdate
+from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
 from src.user.unit_of_work import UserUOW
-from src.user_organizations.repository import UserOrganizationRepository
-from src.user_organizations.service import UserOrganizationService
 
 
 class UserService:

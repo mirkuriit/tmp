@@ -9,7 +9,6 @@ from starlette.status import (
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_404_NOT_FOUND,
-    HTTP_409_CONFLICT,
 )
 
 from tests.utils import compare_dict_fields
