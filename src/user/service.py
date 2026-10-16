@@ -146,7 +146,7 @@ class UserService:
                     user_id,
                     [organization.id for organization in user.organizations]
                 )
-            await self._cache_client.delete(
-                self._cache_client.get_one_cache_key(user_id, "user")
-            )
+        await self._cache_client.delete(
+            self._cache_client.get_one_cache_key(user_id, "user")
+        )
         await self._cache_client.update_get_many_cache_key_version("users")
