@@ -76,9 +76,10 @@ class UserService:
         return users
 
     async def create(self, data: UserCreate) -> UserResponse:
+        create_schema = self._mapper.schema_to_model(data)
         async with self._uow as uow:
             user = await uow.repository.create(
-                self._mapper.schema_to_model(data)
+                create_schema
             )
             if not user:
                 raise ResourceExistsException(

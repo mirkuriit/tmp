@@ -16,10 +16,10 @@ from src.project.unit_of_work import ProjectUOW
 
 
 class ProjectService:
-    def __init__(self, mapper: ProjectMapper, cache_client: CacheClient, ouw: ProjectUOW) -> None:
+    def __init__(self, mapper: ProjectMapper, cache_client: CacheClient, uow: ProjectUOW) -> None:
         self._mapper = mapper
         self._cache_client = cache_client
-        self._ouw = ouw
+        self._uow = uow
 
 
     async def _get_one(
@@ -43,7 +43,7 @@ class ProjectService:
         cache_key = self._cache_client.get_one_cache_key(project_id, "project")
         project = await self._cache_client.get_response(cache_key, ProjectResponse)
         if not project:
-            async with self._ouw as uow:
+            async with self._uow as uow:
                 project = await self._get_one(uow, project_id)
             project = self._mapper.model_to_schema(project)
             await self._cache_client.set_response(cache_key, project)
@@ -53,7 +53,7 @@ class ProjectService:
         cache_key = await self._cache_client.get_many_cache_key("projects", show_after_datetime, show_after_id, limit)
         projects = await self._cache_client.get_response(cache_key, PaginatedProjectResponse)
         if not projects:
-            async with self._ouw as uow:
+            async with self._uow as uow:
                 projects = await uow.repository.get_many(show_after_datetime, show_after_id, limit)
                 if not projects:
                     raise NotFoundException(
@@ -65,14 +65,15 @@ class ProjectService:
 
 
     async def create(self, data: ProjectCreate) -> ProjectResponse:
-        async with self._ouw as uow:
-            project = await uow.repository.create(self._mapper.schema_to_model(data))
+        create_schema = self._mapper.schema_to_model(data)
+        async with self._uow as uow:
+            project = await uow.repository.create(create_schema)
         await self._cache_client.update_get_many_cache_key_version("projects")
         return self._mapper.model_to_schema(project)
 
 
     async def update(self, project_id: UUID, data: ProjectUpdate) -> ProjectResponse:
-        async with self._ouw as uow:
+        async with self._uow as uow:
             project = await self._get_one(uow, project_id)
             await uow.repository.update(project, data)
         project_response = self._mapper.model_to_schema(project)
@@ -88,7 +89,7 @@ class ProjectService:
             project_id: UUID,
             llm_model_id: UUID | None = None
     ) -> ProjectResponse:
-        async with self._ouw as uow:
+        async with self._uow as uow:
             project = await self._get_one(uow, project_id)
             deleted_project = await uow.repository.delete(project, llm_model_id)
         await self._cache_client.delete(self._cache_client.get_one_cache_key(project_id, "project"))

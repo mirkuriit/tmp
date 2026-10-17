@@ -78,9 +78,10 @@ class EventService:
         return events
 
     async def create(self, data: EventCreate) -> EventResponse:
+        create_schema = self._mapper.schema_to_model(data)
         async with self._uow as uow:
             event = await uow.repository.create(
-                self._mapper.schema_to_model(data)
+                create_schema
             )
         await self._cache_client.update_get_many_cache_key_version("events")
         return self._mapper.model_to_schema(event)
