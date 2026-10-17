@@ -21,11 +21,7 @@ class CacheClient:
 
     async def update_get_many_cache_key_version(self, table_name: str) -> int:
         cache_key = f"{table_name}:version"
-        try:
-            return await self._client.incr(cache_key)
-        except ResponseError:
-            await self._client.set(cache_key, 1)
-            return 1
+        return await self._client.incr(cache_key)
 
     async def get_many_cache_key(
             self,
