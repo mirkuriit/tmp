@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
-from src.event.dependencies import get_event_service, get_read_event_service
+from src.event.dependencies import get_event_service
 from src.event.schema import (
    EventCreate,
    EventResponse,
@@ -28,7 +28,7 @@ async def create_event(
 
 @router.get("/")
 async def get_events(
-        event_service: Annotated[EventService, Depends(get_read_event_service)],
+        event_service: Annotated[EventService, Depends(get_event_service)],
         show_after_datetime: dt.datetime | None = None,
         show_after_id: UUID | None = None,
         limit: Annotated[int, Query(ge=1, le=200)] = 10,
@@ -40,7 +40,7 @@ async def get_events(
 @router.get("/{event_id}")
 async def get_event(
         event_id: UUID,
-        event_service: Annotated[EventService, Depends(get_read_event_service)]
+        event_service: Annotated[EventService, Depends(get_event_service)]
 ) -> EventResponse:
    return await event_service.get_one(event_id)
 

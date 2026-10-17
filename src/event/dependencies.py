@@ -1,25 +1,25 @@
-from collections.abc import Callable
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
-from src.db import get_read_session, get_session
+from src.cache import CacheClient, get_cache_client
+from src.event.factories import EventRepositoryFactory
 from src.event.mapper import EventMapper
-from src.event.repository import EventRepository
 from src.event.service import EventService
+from src.event.unit_of_work import EventUOW
 
 
-def event_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession], EventService]:
-    def dependency(
-        session: Annotated[AsyncSession, Depends(session_dependency)],
-    ) -> EventService:
-        repository = EventRepository(session)
-        mapper = EventMapper()
-        return EventService(repository, mapper)
+def event_service_dependency(
+        request: Request,
+        cache_client: Annotated[CacheClient, Depends(get_cache_client)]
+) -> EventService:
 
-    return dependency
+    mapper = EventMapper()
+
+    repository_factory = EventRepositoryFactory()
+    uow = EventUOW(request.app.state.SessionFactory, repository_factory)
+    return EventService(mapper, cache_client, uow)
 
 
-get_read_event_service = event_service_dependency(get_read_session)
-get_event_service = event_service_dependency(get_session)
+get_event_service = event_service_dependency

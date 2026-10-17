@@ -1,4 +1,4 @@
-from sqlalchemy import Sequence
+from collections.abc import Sequence
 
 from src.event.model import Event
 from src.event.schema import (

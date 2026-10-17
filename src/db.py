@@ -1,30 +1,10 @@
 from collections.abc import Callable
 
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-
-from src.config import Settings
-
-settings = Settings()
-
-engine: AsyncEngine = create_async_engine(
-    str(settings.postgres_url),
-    pool_pre_ping=True,
-)
-
-SessionFactory = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+from starlette.requests import Request
 
 
-async def get_session() -> Callable:
-    async with SessionFactory() as session:
+async def get_session(request: Request) -> Callable:
+    async with request.app.state.SessionFactory() as session:
         try:
             yield session
             await session.commit()
@@ -34,8 +14,8 @@ async def get_session() -> Callable:
 
 
 
-async def get_read_session() -> Callable:
-    async with SessionFactory() as session:
+async def get_read_session(request: Request) -> Callable:
+    async with request.app.state.SessionFactory() as session:
         try:
             yield session
         except Exception:

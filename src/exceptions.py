@@ -20,3 +20,8 @@ class ResourceExistsException(HTTPException):
     ) -> None:
         self.status_code = status_code
         self.detail = detail
+
+
+class DuplicateFieldException(Exception):
+    def __init__(self, detail):
+        self.detail = detail

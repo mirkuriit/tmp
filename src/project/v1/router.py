@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
-from src.project.dependencies import get_project_service, get_read_project_service
+from src.project.dependencies import get_project_service
 from src.project.schema import (
    PaginatedProjectResponse,
    ProjectCreate,
@@ -28,7 +28,7 @@ async def create_project(
 
 @router.get("/")
 async def get_projects(
-        project_service: Annotated[ProjectService, Depends(get_read_project_service)],
+        project_service: Annotated[ProjectService, Depends(get_project_service)],
         show_after_datetime: dt.datetime | None = None,
         show_after_id: UUID | None = None,
         limit: Annotated[int, Query(ge=1, le=200)] = 10,
@@ -40,7 +40,7 @@ async def get_projects(
 @router.get("/{project_id}")
 async def get_project(
         project_id: UUID,
-        project_service: Annotated[ProjectService, Depends(get_read_project_service)]
+        project_service: Annotated[ProjectService, Depends(get_project_service)]
 ) -> ProjectResponse:
    return await project_service.get_one(project_id)
 

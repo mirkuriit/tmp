@@ -1,25 +1,19 @@
-from collections.abc import Callable
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
-from src.db import get_read_session, get_session
+from src.cache import CacheClient, get_cache_client
+from src.project.factories import ProjectRepositoryFactory
 from src.project.mapper import ProjectMapper
-from src.project.repository import ProjectRepository
 from src.project.service import ProjectService
+from src.project.unit_of_work import ProjectUOW
 
 
-def project_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession], ProjectService]:
-    def dependency(
-        session: Annotated[AsyncSession, Depends(session_dependency)],
-    ) -> ProjectService:
-        repository = ProjectRepository(session)
-        mapper = ProjectMapper()
-        return ProjectService(repository, mapper)
+def project_service_dependency(request: Request, cache_client: Annotated[CacheClient, Depends(get_cache_client)]) -> ProjectService:
+    mapper = ProjectMapper()
+    repository_factory = ProjectRepositoryFactory()
+    uow = ProjectUOW(request.app.state.SessionFactory, repository_factory)
+    return ProjectService(mapper, cache_client, uow)
 
-    return dependency
-
-
-get_read_project_service = project_service_dependency(get_read_session)
-get_project_service = project_service_dependency(get_session)
+get_project_service = project_service_dependency
