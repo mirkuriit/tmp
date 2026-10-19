@@ -19,9 +19,9 @@ from tests.utils import compare_object_fields
 
 
 @pytest.fixture(scope="session")
-def repository(db_session: AsyncSession) -> EventRepository:
+def repository(repository_db_session: AsyncSession) -> EventRepository:
     return EventRepository(
-        db_session
+        repository_db_session
     )
 
 
@@ -29,12 +29,11 @@ def repository(db_session: AsyncSession) -> EventRepository:
 def service(
         db_session: AsyncSession,
         cache_client: CacheClient,
-        repository: EventRepository
 ) -> EventService:
     return EventService(
         EventMapper(),
         cache_client,
-        repository,
+        EventRepository(db_session),
         UnitOfWork(db_session)
     )
 

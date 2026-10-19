@@ -19,9 +19,9 @@ from tests.utils import compare_object_fields
 
 
 @pytest.fixture(scope="session")
-def repository(db_session: AsyncSession) -> ProjectRepository:
+def repository(repository_db_session: AsyncSession) -> ProjectRepository:
     return ProjectRepository(
-        db_session
+        repository_db_session
     )
 
 
@@ -29,12 +29,11 @@ def repository(db_session: AsyncSession) -> ProjectRepository:
 def service(
         db_session: AsyncSession,
         cache_client: CacheClient,
-        repository: ProjectRepository
 ) -> ProjectService:
     return ProjectService(
         ProjectMapper(),
         cache_client,
-        repository,
+        ProjectRepository(db_session),
         UnitOfWork(db_session)
     )
 

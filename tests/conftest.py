@@ -60,6 +60,12 @@ async def db_session(
 
 
 @pytest.fixture(scope="session")
+async def repository_db_session(db_session_factory: async_sessionmaker[AsyncSession]):
+    async with db_session_factory() as session:
+        yield session
+
+
+@pytest.fixture(scope="session")
 def redis_container():
     with RedisContainer("redis:7") as redis:
         yield redis

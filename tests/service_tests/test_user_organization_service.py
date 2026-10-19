@@ -19,29 +19,29 @@ from tests.utils import compare_object_fields
 
 
 @pytest.fixture(scope="session")
-def service(db_session: AsyncSession) -> UserOrganizationService:
+def service(repository_db_session: AsyncSession) -> UserOrganizationService:
     return UserOrganizationService(
-        UserOrganizationRepository(db_session),
+        UserOrganizationRepository(repository_db_session),
         UserOrganizationMapper()
     )
 
 
 @pytest.fixture(scope="session")
-def repository(db_session: AsyncSession) -> UserOrganizationRepository:
+def repository(repository_db_session: AsyncSession) -> UserOrganizationRepository:
     return UserOrganizationRepository(
-        db_session
+        repository_db_session
     )
 
 
 @pytest.fixture(scope="session")
-def organization_repository(db_session: AsyncSession) -> OrganizationRepository:
+def organization_repository(repository_db_session: AsyncSession) -> OrganizationRepository:
     return OrganizationRepository(
-        db_session
+        repository_db_session
     )
 
 
 @pytest.fixture(scope="session")
-def organization_service(db_session: AsyncSession, organization_repository: OrganizationRepository) -> OrganizationService:
+def organization_service(repository_db_session: AsyncSession, organization_repository: OrganizationRepository) -> OrganizationService:
     return OrganizationService(
         organization_repository,
         OrganizationMapper(),
@@ -49,22 +49,22 @@ def organization_service(db_session: AsyncSession, organization_repository: Orga
 
 
 @pytest.fixture(scope="session")
-def user_repository(db_session: AsyncSession) -> UserRepository:
+def user_repository(repository_db_session: AsyncSession) -> UserRepository:
     return UserRepository(
-        db_session
+        repository_db_session
     )
 
 
 
 @pytest.fixture(scope="session")
-async def user(db_session: AsyncSession, user_repository: UserRepository) -> User:
+async def user(user_repository: UserRepository) -> User:
     return await user_repository.create(
         User(username="user_org_fish", has_premium=False)
     )
 
 
 @pytest.fixture(scope="session")
-async def created_organizations_response(db_session: AsyncSession, organization_service: OrganizationService) -> list[OrganizationResponse]:
+async def created_organizations_response(organization_service: OrganizationService) -> list[OrganizationResponse]:
     return await organization_service.create_many(
         [
             OrganizationCreate(name="First fish org"),
@@ -88,7 +88,7 @@ async def created_user_organizations_response(
 async def test_create_many_user_organization(
         user: User,
         created_user_organizations_response: list[UserOrganizationResponse],
-        db_session: AsyncSession
+        repository_db_session: AsyncSession
 ) -> None:
     statement = select(
         UserOrganization
@@ -97,7 +97,7 @@ async def test_create_many_user_organization(
         UserOrganization.user_id == user.id
     )
 
-    user_organizations =  (await db_session.scalars(statement)).all()
+    user_organizations =  (await repository_db_session.scalars(statement)).all()
     for user_organization, created_user_organization_response in zip(user_organizations, created_user_organizations_response):
         compare_object_fields(user_organization, created_user_organization_response)
 

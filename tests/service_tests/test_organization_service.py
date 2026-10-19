@@ -13,17 +13,17 @@ from tests.utils import compare_object_fields
 
 
 @pytest.fixture(scope="session")
-def service(db_session: AsyncSession) -> OrganizationService:
+def service(repository_db_session: AsyncSession) -> OrganizationService:
     return OrganizationService(
-        OrganizationRepository(db_session),
+        OrganizationRepository(repository_db_session),
         OrganizationMapper(),
     )
 
 
 @pytest.fixture(scope="session")
-def repository(db_session: AsyncSession) -> OrganizationRepository:
+def repository(repository_db_session: AsyncSession) -> OrganizationRepository:
     return OrganizationRepository(
-        db_session
+        repository_db_session
     )
 
 
