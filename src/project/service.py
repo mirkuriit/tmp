@@ -14,7 +14,6 @@ from src.project.schema import (
     ProjectResponse,
     ProjectUpdate,
 )
-from src.project.unit_of_work import ProjectUOW
 
 
 class ProjectService:

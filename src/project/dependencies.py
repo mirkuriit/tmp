@@ -1,17 +1,12 @@
 from typing import Annotated
 
 from fastapi import Depends
-from starlette.requests import Request
 
 from src.cache import CacheClient, cache_client_dependency
 from src.db import SessionDependency, UnitOfWork, uow_dependency
-from src.project.factories import ProjectRepositoryFactory
 from src.project.mapper import ProjectMapper
 from src.project.repository import ProjectRepository
 from src.project.service import ProjectService
-from src.project.unit_of_work import ProjectUOW
-
-
 
 
 def project_repository_dependency(db_session: SessionDependency) -> ProjectRepository:

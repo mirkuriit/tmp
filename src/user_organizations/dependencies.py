@@ -1,10 +1,8 @@
-from collections.abc import Callable
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db import get_read_session, get_session, SessionDependency
+from src.db import SessionDependency
 from src.user_organizations.mapper import UserOrganizationMapper
 from src.user_organizations.repository import UserOrganizationRepository
 from src.user_organizations.service import UserOrganizationService

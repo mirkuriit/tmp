@@ -10,7 +10,6 @@ from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user.repository import UserRepository
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
-
 from src.user_organizations.service import UserOrganizationService
 
 

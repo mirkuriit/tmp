@@ -4,7 +4,6 @@ from uuid import UUID
 
 import redis.asyncio as redis
 from pydantic import BaseModel
-from redis import ResponseError
 from starlette.requests import Request
 
 T = TypeVar("T", bound=BaseModel)

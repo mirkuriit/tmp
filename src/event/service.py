@@ -15,7 +15,6 @@ from src.event.schema import (
     EventUpdate,
     PaginatedEventResponse,
 )
-from src.event.unit_of_work import EventUOW
 from src.exceptions import DuplicateFieldException, NotFoundException
 from src.logger import logger
 

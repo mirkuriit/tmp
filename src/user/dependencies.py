@@ -1,18 +1,15 @@
 from typing import Annotated
 
 from fastapi import Depends
-from starlette.requests import Request
 
 from src.cache import CacheClient, cache_client_dependency
 from src.db import SessionDependency, UnitOfWork, uow_dependency
 from src.organization.dependencies import organization_service_dependency
-from src.user.factories import UserRepositoryFactory, UserServiceFactory
+from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
 from src.user.repository import UserRepository
 from src.user.service import UserService
-from src.organization.service import OrganizationService
-from src.user_organizations.dependencies import \
-    user_organization_service_dependency
+from src.user_organizations.dependencies import user_organization_service_dependency
 from src.user_organizations.service import UserOrganizationService
 
 
