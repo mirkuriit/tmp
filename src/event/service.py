@@ -5,8 +5,10 @@ from fastapi.exceptions import HTTPException
 from starlette.status import HTTP_409_CONFLICT
 
 from src.cache import CacheClient
+from src.db import UnitOfWork
 from src.event.mapper import EventMapper
 from src.event.model import Event
+from src.event.repository import EventRepository
 from src.event.schema import (
     EventCreate,
     EventResponse,
@@ -23,18 +25,19 @@ class EventService:
             self,
             mapper: EventMapper,
             cache_client: CacheClient,
-            uow: EventUOW
+            repository: EventRepository,
+            uow: UnitOfWork
     ) -> None:
         self._mapper = mapper
         self._cache_client = cache_client
+        self._repository = repository
         self._uow = uow
 
     async def _get_one(
             self,
-            uow: EventUOW,
             event_id: UUID,
     ) -> Event:
-        event = await uow.repository.get_one_or_none(event_id)
+        event = await self._repository.get_one_or_none(event_id)
         if event is None:
             detail = f"Event with id: {event_id} not found"
             exception = NotFoundException(detail=detail)
@@ -49,8 +52,8 @@ class EventService:
         cache_key = self._cache_client.get_one_cache_key(event_id, "event")
         event = await self._cache_client.get_response(cache_key, EventResponse)
         if not event:
-            async with self._uow as uow:
-                event = await self._get_one(uow, event_id)
+            async with self._uow:
+                event = await self._get_one(event_id)
             event = self._mapper.model_to_schema(event)
             await self._cache_client.set_response(cache_key, event)
         return event
@@ -64,8 +67,8 @@ class EventService:
         cache_key = await self._cache_client.get_many_cache_key("events", show_after_datetime, show_after_id, limit)
         events = await self._cache_client.get_response(cache_key, PaginatedEventResponse)
         if not events:
-            async with self._uow as uow:
-                models = await uow.repository.get_many(
+            async with self._uow:
+                models = await self._repository.get_many(
                     show_after_datetime,
                     show_after_id, limit
                 )
@@ -79,8 +82,8 @@ class EventService:
 
     async def create(self, data: EventCreate) -> EventResponse:
         create_schema = self._mapper.schema_to_model(data)
-        async with self._uow as uow:
-            event = await uow.repository.create(
+        async with self._uow:
+            event = await self._repository.create(
                 create_schema
             )
         await self._cache_client.update_get_many_cache_key_version("events")
@@ -91,10 +94,10 @@ class EventService:
             event_id: UUID,
             data: EventUpdate
     ) -> EventResponse:
-        async with self._uow as uow:
-            event = await self._get_one(uow, event_id)
+        async with self._uow:
+            event = await self._get_one(event_id)
             try:
-                await uow.repository.update(event, data)
+                await self._repository.update(event, data)
             except DuplicateFieldException as ex:
                 raise HTTPException(
                     status_code=HTTP_409_CONFLICT,
@@ -109,9 +112,9 @@ class EventService:
             self,
             event_id: UUID,
     ) -> EventResponse:
-        async with self._uow as uow:
-            event = await self._get_one(uow, event_id)
-            deleted_event = await uow.repository.delete(event)
+        async with self._uow:
+            event = await self._get_one(event_id)
+            deleted_event = await self._repository.delete(event)
         await self._cache_client.delete(self._cache_client.get_one_cache_key(event_id, "event"))
         await self._cache_client.update_get_many_cache_key_version("events")
         return self._mapper.model_to_schema(deleted_event)

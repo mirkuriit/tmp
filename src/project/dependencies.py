@@ -3,17 +3,34 @@ from typing import Annotated
 from fastapi import Depends
 from starlette.requests import Request
 
-from src.cache import CacheClient, get_cache_client
+from src.cache import CacheClient, cache_client_dependency
+from src.db import SessionDependency, UnitOfWork, uow_dependency
 from src.project.factories import ProjectRepositoryFactory
 from src.project.mapper import ProjectMapper
+from src.project.repository import ProjectRepository
 from src.project.service import ProjectService
 from src.project.unit_of_work import ProjectUOW
 
 
-def project_service_dependency(request: Request, cache_client: Annotated[CacheClient, Depends(get_cache_client)]) -> ProjectService:
-    mapper = ProjectMapper()
-    repository_factory = ProjectRepositoryFactory()
-    uow = ProjectUOW(request.app.state.SessionFactory, repository_factory)
-    return ProjectService(mapper, cache_client, uow)
 
-get_project_service = project_service_dependency
+
+def project_repository_dependency(db_session: SessionDependency) -> ProjectRepository:
+    return ProjectRepository(db_session)
+
+
+def project_mapper_dependency() -> ProjectMapper:
+    return ProjectMapper()
+
+
+def project_service_dependency(
+        cache_client: Annotated[CacheClient, Depends(cache_client_dependency)],
+        mapper: Annotated[ProjectMapper, Depends(project_mapper_dependency)],
+        repository: Annotated[ProjectRepository, Depends(project_repository_dependency)],
+        uow: Annotated[UnitOfWork, Depends(uow_dependency)]
+) -> ProjectService:
+    return ProjectService(
+        mapper=mapper,
+        cache_client=cache_client,
+        uow=uow,
+        repository=repository
+    )

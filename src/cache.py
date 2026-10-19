@@ -63,5 +63,5 @@ class CacheClient:
 
 
 
-def get_cache_client(request: Request) -> CacheClient:
+def cache_client_dependency(request: Request) -> CacheClient:
     return request.app.state.cache_client
