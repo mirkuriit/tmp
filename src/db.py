@@ -30,7 +30,8 @@ class UnitOfWork:
         self.session = session
 
     async def __aenter__(self):
-        await self.session.begin()
+        if not self.session.in_transaction():
+            await self.session.begin()
         return self
 
     async def __aexit__(self, exc_type, exc, tb):

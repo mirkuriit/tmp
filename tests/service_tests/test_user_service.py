@@ -2,8 +2,11 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.cache import CacheClient
+from src.db import UnitOfWork
+from src.organization.mapper import OrganizationMapper
+from src.organization.repository import OrganizationRepository
 from src.organization.schema import OrganizationCreate
-from src.user.factories import UserRepositoryFactory, UserServiceFactory
+from src.organization.service import OrganizationService
 from src.user.mapper import UserMapper
 from src.user.repository import UserRepository
 from src.user.schema import (
@@ -13,38 +16,38 @@ from src.user.schema import (
     UserUpdate,
 )
 from src.user.service import UserService
-from src.user.unit_of_work import UserUOW
+from src.user_organizations.mapper import UserOrganizationMapper
+from src.user_organizations.repository import UserOrganizationRepository
+from src.user_organizations.service import UserOrganizationService
 from tests.utils import compare_object_fields
-
-
-@pytest.fixture(scope="session")
-def repository_factory() -> UserRepositoryFactory:
-    return UserRepositoryFactory()
-
-
-@pytest.fixture(scope="session")
-def service_factory() -> UserServiceFactory:
-    return UserServiceFactory()
-
-
-@pytest.fixture(scope="session")
-def service(
-        cache_client: CacheClient,
-        db_session_factory,
-        service_factory: UserServiceFactory,
-        repository_factory: UserRepositoryFactory
-) -> UserService:
-    return UserService(
-        UserMapper(),
-        cache_client,
-        UserUOW(db_session_factory, service_factory, repository_factory)
-    )
 
 
 @pytest.fixture(scope="session")
 def repository(db_session: AsyncSession) -> UserRepository:
     return UserRepository(
         db_session
+    )
+
+
+@pytest.fixture(scope="session")
+def service(
+        db_session: AsyncSession,
+        cache_client: CacheClient,
+        repository: UserRepository
+) -> UserService:
+    return UserService(
+        repository=repository,
+        mapper=UserMapper(),
+        organization_service=OrganizationService(
+            OrganizationRepository(db_session),
+            OrganizationMapper()
+        ),
+        user_organization_service=UserOrganizationService(
+            UserOrganizationRepository(db_session),
+            UserOrganizationMapper()
+        ),
+        cache_client=cache_client,
+        uow=UnitOfWork(db_session)
     )
 
 

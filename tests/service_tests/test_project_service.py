@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.cache import CacheClient
+from src.db import UnitOfWork
 from src.llm_models.schema import LLMModelCreate
-from src.project.factories import ProjectRepositoryFactory
 from src.project.mapper import ProjectMapper
 from src.project.repository import ProjectRepository
 from src.project.schema import (
@@ -15,32 +15,27 @@ from src.project.schema import (
     ProjectUpdate,
 )
 from src.project.service import ProjectService
-from src.project.unit_of_work import ProjectUOW
 from tests.utils import compare_object_fields
-
-
-@pytest.fixture(scope="session")
-def repository_factory() -> ProjectRepositoryFactory:
-    return ProjectRepositoryFactory()
-
-
-@pytest.fixture(scope="session")
-def service(
-        cache_client: CacheClient,
-        db_session_factory,
-        repository_factory: ProjectRepositoryFactory
-) -> ProjectService:
-    return ProjectService(
-        ProjectMapper(),
-        cache_client,
-        ProjectUOW(db_session_factory, repository_factory)
-    )
 
 
 @pytest.fixture(scope="session")
 def repository(db_session: AsyncSession) -> ProjectRepository:
     return ProjectRepository(
         db_session
+    )
+
+
+@pytest.fixture(scope="session")
+def service(
+        db_session: AsyncSession,
+        cache_client: CacheClient,
+        repository: ProjectRepository
+) -> ProjectService:
+    return ProjectService(
+        ProjectMapper(),
+        cache_client,
+        repository,
+        UnitOfWork(db_session)
     )
 
 
