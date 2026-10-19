@@ -30,20 +30,18 @@ class UnitOfWork:
         self.session = session
 
     async def __aenter__(self):
-        await self.session.begin()
+        self._transaction = await self.session.begin()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb):
-        if exc_type is None:
-            try:
-                await self.session.commit()
-            except BaseException:
-                await self.session.rollback()
-                raise
-        else:
-            await self.session.rollback()
-
-        return False
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        try:
+            await self._transaction.__aexit__(
+                exc_type,
+                exc_val,
+                exc_tb,
+            )
+        finally:
+            await self.session.close()
 
 
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
