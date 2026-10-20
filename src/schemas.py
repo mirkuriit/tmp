@@ -2,13 +2,18 @@ import datetime as dt
 from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic_core import PydanticCustomError
 
 
 class Base(BaseModel):
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PaginationPage(BaseModel):
+    show_after_datetime: dt.datetime | None
+    show_after_id: UUID | None
+    limit: int = 10
 
 
 class PaginatedResponse(BaseModel):

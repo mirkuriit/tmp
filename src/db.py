@@ -1,30 +1,22 @@
 from collections.abc import Callable
+from typing import Annotated
 
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-
-from src.config import Settings
-
-settings = Settings()
-
-engine: AsyncEngine = create_async_engine(
-    str(settings.postgres_url),
-    pool_pre_ping=True,
-)
-
-SessionFactory = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 
-async def get_session() -> Callable:
-    async with SessionFactory() as session:
+async def get_read_session(request: Request) -> Callable:
+    async with request.app.state.SessionFactory() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+
+
+async def get_session(request: Request) -> Callable:
+    async with request.app.state.SessionFactory() as session:
         try:
             yield session
             await session.commit()
@@ -33,11 +25,27 @@ async def get_session() -> Callable:
             raise
 
 
+class UnitOfWork:
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
-async def get_read_session() -> Callable:
-    async with SessionFactory() as session:
+    async def __aenter__(self):
+        self._transaction = await self.session.begin()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         try:
-            yield session
-        except Exception:
-            await session.rollback()
-            raise
+            await self._transaction.__aexit__(
+                exc_type,
+                exc_val,
+                exc_tb,
+            )
+        finally:
+            await self.session.close()
+
+
+SessionDependency = Annotated[AsyncSession, Depends(get_session)]
+
+
+def uow_dependency(session: SessionDependency) -> UnitOfWork:
+    return UnitOfWork(session)

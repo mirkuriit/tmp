@@ -8,6 +8,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7
+    ports:
+      - "6378:6379"
+    env_file:
+      - .docker.env
+    volumes:
+      - redis_data:/data
 
   app:
     build: .
@@ -17,7 +25,9 @@ services:
       - .docker.env
     depends_on:
       - postgres
+      - redis
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  redis_data:

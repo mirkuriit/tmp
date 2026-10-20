@@ -15,7 +15,8 @@ class Organization(AuditMixin, Base):
     logo_url: Mapped[str | None] = mapped_column(nullable=True)
     users: Mapped[list["User"]] = relationship(
         secondary="user_organizations",
-        back_populates="organizations"
+        back_populates="organizations",
+        viewonly = True,
     )
 
     organization_users: Mapped[list["UserOrganization"]] = relationship(

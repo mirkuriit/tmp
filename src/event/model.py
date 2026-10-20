@@ -9,7 +9,7 @@ from src.models import AuditMixin, Base
 
 class Event(AuditMixin, Base):
     __tablename__ = 'events'
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str]
     description: Mapped[str]
     start_date: Mapped[dt.datetime] = mapped_column(sa.TIMESTAMP(timezone=True))
     end_date: Mapped[dt.datetime]  = mapped_column(sa.TIMESTAMP(timezone=True))

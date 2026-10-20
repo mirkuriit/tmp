@@ -1,25 +1,23 @@
-from collections.abc import Callable
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db import get_read_session, get_session
+from src.db import SessionDependency
 from src.organization.mapper import OrganizationMapper
 from src.organization.repository import OrganizationRepository
 from src.organization.service import OrganizationService
 
 
-def organization_service_dependency(session_dependency: Callable[..., Any]) -> Callable[[AsyncSession], OrganizationService]:
-    def dependency(
-        session: Annotated[AsyncSession, Depends(session_dependency)],
-    ) -> OrganizationService:
-        repository = OrganizationRepository(session)
-        mapper = OrganizationMapper()
-        return OrganizationService(repository, mapper)
-
-    return dependency
+def organization_repository_dependency(db_session: SessionDependency) -> OrganizationRepository:
+    return OrganizationRepository(db_session)
 
 
-get_read_organization_service = organization_service_dependency(get_read_session)
-get_organization_service = organization_service_dependency(get_session)
+def organization_mapper_dependency() -> OrganizationMapper:
+    return OrganizationMapper()
+
+
+def organization_service_dependency(
+        mapper: Annotated[OrganizationMapper, Depends(organization_mapper_dependency)],
+        repository: Annotated[OrganizationRepository, Depends(organization_repository_dependency)]
+) -> OrganizationService:
+    return OrganizationService(repository, mapper)

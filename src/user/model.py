@@ -20,6 +20,7 @@ class User(AuditMixin, Base):
         secondary="user_organizations",
         back_populates="users",
         lazy="selectin",
+        viewonly=True,
         primaryjoin="User.id == UserOrganization.user_id",
         secondaryjoin="and_(Organization.id == UserOrganization.organization_id, Organization.is_deleted == False)",
     )

@@ -1,13 +1,46 @@
+from contextlib import asynccontextmanager
+
+import redis.asyncio as redis
 from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import (
+    async_sessionmaker,
+    create_async_engine,
+)
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
+from src.cache import CacheClient
+from src.config import Settings, settings
 from src.event.v1.router import router as event_router_v1
 from src.healthchek.healthcheck_router import router as healthcheck_router
 from src.middleware import LogMiddleware
 from src.project.v1.router import router as project_router_v1
 from src.user.v1.router import router as user_router_v1
 
+
+def make_lifespan(settings: Settings):
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        redis_client = redis.Redis.from_url(
+            settings.redis_url,
+            decode_responses=True
+        )
+        app.state.cache_client = CacheClient(
+            client=redis_client,
+            default_cache_key_ttl=settings.default_cache_key_ttl,
+        )
+
+        engine = create_async_engine(settings.postgres_url, pool_pre_ping=True)
+        app.state.db_engine = engine
+        app.state.SessionFactory = async_sessionmaker(engine, expire_on_commit=False)
+
+        try:
+            yield
+        finally:
+            await redis_client.aclose()
+            await engine.dispose()
+
+    return lifespan
 
 def add_routers(app: FastAPI) -> None:
     app.include_router(healthcheck_router)
@@ -26,16 +59,18 @@ def add_middlewares(app: FastAPI) -> None:
     )
     app.add_middleware(LogMiddleware)
 
-def get_app() -> FastAPI:
+def get_app(settings: Settings) -> FastAPI:
     app = FastAPI(
         docs_url='/docs',
         openapi_url='/openapi.json',
         default_response_class=JSONResponse,
+        lifespan=make_lifespan(settings),
     )
+    app.state.settings = settings
 
     add_routers(app)
     add_middlewares(app)
 
     return app
 
-app = get_app()
+app = get_app(settings)

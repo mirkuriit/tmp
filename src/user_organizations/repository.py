@@ -1,4 +1,3 @@
-
 from uuid import UUID
 
 from sqlalchemy import select
@@ -24,6 +23,7 @@ class UserOrganizationRepository:
             UserOrganization.is_deleted == is_deleted,
         )
         return await self._session.scalar(statement)
+
 
 
     async def create(self, user_organization: UserOrganization) -> UserOrganization:

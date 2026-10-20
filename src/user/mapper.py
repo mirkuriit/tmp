@@ -1,7 +1,7 @@
+from collections.abc import Sequence
 from typing import Any
 
 import sqlalchemy as sa
-from sqlalchemy import Sequence
 
 from src.user.model import User
 from src.user.schema import PaginatedUserResponse, UserCreate, UserResponse, UserUpdate
@@ -20,14 +20,8 @@ class UserMapper:
 
     @staticmethod
     def models_to_pagination_schema(users: Sequence[User]) -> PaginatedUserResponse:
-        if not users:
-            return PaginatedUserResponse(
-                items=users,
-                last_seen_id=None,
-                last_seen_datetime=None
-            )
         return PaginatedUserResponse(
-            items=users,
+            items=[UserResponse.model_validate(user) for user in users],
             last_seen_id=users[-1].id,
             last_seen_datetime=users[-1].created_at
         )
