@@ -15,6 +15,7 @@ from src.project.schema import (
     ProjectUpdate,
 )
 from src.project.service import ProjectService
+from src.schemas import PaginationPage
 from tests.utils import compare_object_fields
 
 
@@ -108,13 +109,13 @@ async def test_get_many_projects(
         created_project_response: ProjectResponse,
         service: ProjectService,
         cache_client: CacheClient,
+        default_pagination_page: PaginationPage
 ) -> None:
-    limit = 10
-    cache_key = await cache_client.get_many_cache_key("projects", None, None, limit)
+    cache_key = await cache_client.get_many_cache_key("projects", default_pagination_page)
     await cache_client.delete(cache_key)
     assert await cache_client.get_response(cache_key, PaginatedProjectResponse) is None
 
-    projects = await service.get_many(None, None, limit)
+    projects = await service.get_many(default_pagination_page)
     cached_projects = await cache_client.get_response(cache_key, PaginatedProjectResponse)
     assert cached_projects is not None
     assert cached_projects == projects

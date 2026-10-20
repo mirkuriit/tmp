@@ -17,6 +17,7 @@ from src.cache import CacheClient
 from src.config import Settings
 from src.main import get_app
 from src.models import Base
+from src.schemas import PaginationPage
 from src.utils import import_models
 
 T = TypeVar("T")
@@ -107,3 +108,12 @@ async def client(app: FastAPI) -> AsyncClient:
 @pytest.fixture(scope="session")
 def cache_client(redis_client: redis.Redis, app: FastAPI):
     return CacheClient(redis_client, app.state.settings.default_cache_key_ttl)
+
+
+@pytest.fixture(scope="session")
+def default_pagination_page() -> PaginationPage:
+    return PaginationPage(
+        show_after_id=None,
+        show_after_datetime=None,
+        limit=10
+    )

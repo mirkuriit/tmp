@@ -7,6 +7,7 @@ from src.organization.mapper import OrganizationMapper
 from src.organization.repository import OrganizationRepository
 from src.organization.schema import OrganizationCreate
 from src.organization.service import OrganizationService
+from src.schemas import PaginationPage
 from src.user.mapper import UserMapper
 from src.user.repository import UserRepository
 from src.user.schema import (
@@ -121,13 +122,13 @@ async def test_get_many_users(
         created_user_response: UserResponse,
         service: UserService,
         cache_client: CacheClient,
+        default_pagination_page: PaginationPage
 ) -> None:
-    limit = 10
-    cache_key = await cache_client.get_many_cache_key("users", None, None, limit)
+    cache_key = await cache_client.get_many_cache_key("users", default_pagination_page)
     await cache_client.delete(cache_key)
     assert await cache_client.get_response(cache_key, PaginatedUserResponse) is None
 
-    users = await service.get_many(None, None, limit)
+    users = await service.get_many(default_pagination_page)
     cached_users = await cache_client.get_response(cache_key, PaginatedUserResponse)
     assert cached_users is not None
     assert cached_users == users

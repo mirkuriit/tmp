@@ -15,6 +15,7 @@ from src.event.schema import (
 )
 from src.event.service import EventService
 from src.event_info.schema import EventInfoCreate
+from src.schemas import PaginationPage
 from tests.utils import compare_object_fields
 
 
@@ -126,13 +127,13 @@ async def test_get_many_events(
         created_event_response: EventResponse,
         service: EventService,
         cache_client: CacheClient,
+        default_pagination_page: PaginationPage
 ) -> None:
-    limit = 10
-    cache_key = await cache_client.get_many_cache_key("events", None, None, limit)
+    cache_key = await cache_client.get_many_cache_key("events", default_pagination_page)
     await cache_client.delete(cache_key)
     assert await cache_client.get_response(cache_key, PaginatedEventResponse) is None
 
-    events = await service.get_many(None, None, limit)
+    events = await service.get_many(default_pagination_page)
     cached_events = await cache_client.get_response(cache_key, PaginatedEventResponse)
     assert cached_events is not None
     assert cached_events == events
