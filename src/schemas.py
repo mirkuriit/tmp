@@ -10,6 +10,12 @@ class Base(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class PaginationPage(BaseModel):
+    show_after_datetime: dt.datetime | None
+    show_after_id: UUID | None
+    limit: int = 10
+
+
 class PaginatedResponse(BaseModel):
     last_seen_datetime: dt.datetime | None
     last_seen_id: UUID | None

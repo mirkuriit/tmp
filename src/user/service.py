@@ -1,4 +1,3 @@
-import datetime as dt
 from uuid import UUID
 
 from src.cache import CacheClient
@@ -6,6 +5,7 @@ from src.db import UnitOfWork
 from src.exceptions import NotFoundException, ResourceExistsException
 from src.logger import logger
 from src.organization.service import OrganizationService
+from src.schemas import PaginationPage
 from src.user.mapper import UserMapper
 from src.user.model import User
 from src.user.repository import UserRepository
@@ -55,14 +55,10 @@ class UserService:
             await self._cache_client.set_response(cache_key, user)
         return user
 
-    async def get_many(self, show_after_datetime: dt.datetime | None,
-                       show_after_id: UUID | None,
-                       limit: int) -> PaginatedUserResponse:
+    async def get_many(self, pagination_page: PaginationPage) -> PaginatedUserResponse:
         cache_key = await self._cache_client.get_many_cache_key(
             "users",
-            show_after_datetime,
-            show_after_id,
-            limit
+            pagination_page
         )
         users = await self._cache_client.get_response(
             cache_key,
@@ -71,9 +67,9 @@ class UserService:
         if not users:
             async with self._uow:
                 users = await self._repository.get_many(
-                    limit=limit,
-                    show_after_datetime=show_after_datetime,
-                    show_after_id=show_after_id,
+                    limit=pagination_page.limit,
+                    show_after_datetime=pagination_page.show_after_datetime,
+                    show_after_id=pagination_page.show_after_id,
                 )
             if not users:
                 raise NotFoundException(

@@ -1,4 +1,3 @@
-import datetime as dt
 from typing import Annotated
 from uuid import UUID
 
@@ -6,6 +5,8 @@ from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
+from src.dependencies import pagination_page_dependency
+from src.schemas import PaginationPage
 from src.user.dependencies import user_service_dependency
 from src.user.schema import (
    PaginatedUserResponse,
@@ -30,12 +31,9 @@ async def create_user(
 @router.get("/")
 async def get_users(
         user_service: Annotated[UserService, Depends(user_service_dependency)],
-        show_after_datetime: dt.datetime | None = None,
-        show_after_id: UUID | None = None,
-        limit: int = 10
-
+        pagination_page: Annotated[PaginationPage, Depends(pagination_page_dependency)],
 ) -> PaginatedUserResponse:
-   return await user_service.get_many(show_after_datetime, show_after_id, limit)
+   return await user_service.get_many(pagination_page)
 
 
 @router.get("/{user_id}")

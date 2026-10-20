@@ -1,11 +1,11 @@
-import datetime as dt
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
+from src.dependencies import pagination_page_dependency
 from src.event.dependencies import event_service_dependency
 from src.event.schema import (
    EventCreate,
@@ -14,6 +14,7 @@ from src.event.schema import (
    PaginatedEventResponse,
 )
 from src.event.service import EventService
+from src.schemas import PaginationPage
 
 router = APIRouter(prefix="/event/v1", tags=["Event V1"])
 
@@ -29,12 +30,9 @@ async def create_event(
 @router.get("/")
 async def get_events(
         event_service: Annotated[EventService, Depends(event_service_dependency)],
-        show_after_datetime: dt.datetime | None = None,
-        show_after_id: UUID | None = None,
-        limit: Annotated[int, Query(ge=1, le=200)] = 10,
-
+        pagination_page: Annotated[PaginationPage, Depends(pagination_page_dependency)],
 ) -> PaginatedEventResponse:
-   return await event_service.get_many(show_after_datetime, show_after_id, limit)
+   return await event_service.get_many(pagination_page)
 
 
 @router.get("/{event_id}")

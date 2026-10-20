@@ -1,4 +1,3 @@
-import datetime as dt
 from uuid import UUID
 
 from src.cache import CacheClient
@@ -14,6 +13,7 @@ from src.project.schema import (
     ProjectResponse,
     ProjectUpdate,
 )
+from src.schemas import PaginationPage
 
 
 class ProjectService:
@@ -50,12 +50,16 @@ class ProjectService:
             await self._cache_client.set_response(cache_key, project)
         return project
 
-    async def get_many(self, show_after_datetime: dt.datetime | None, show_after_id: UUID | None, limit: int) -> PaginatedProjectResponse:
-        cache_key = await self._cache_client.get_many_cache_key("projects", show_after_datetime, show_after_id, limit)
+    async def get_many(self, pagination_page: PaginationPage) -> PaginatedProjectResponse:
+        cache_key = await self._cache_client.get_many_cache_key("projects", pagination_page)
         projects = await self._cache_client.get_response(cache_key, PaginatedProjectResponse)
         if not projects:
             async with self._uow:
-                projects = await self._repository.get_many(show_after_datetime, show_after_id, limit)
+                projects = await self._repository.get_many(
+                    pagination_page.show_after_datetime,
+                    pagination_page.show_after_id,
+                    pagination_page.limit
+                )
                 if not projects:
                     raise NotFoundException(
                         detail="Projects not found"

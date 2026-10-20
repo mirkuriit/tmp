@@ -1,4 +1,3 @@
-import datetime as dt
 from uuid import UUID
 
 from fastapi.exceptions import HTTPException
@@ -17,6 +16,7 @@ from src.event.schema import (
 )
 from src.exceptions import DuplicateFieldException, NotFoundException
 from src.logger import logger
+from src.schemas import PaginationPage
 
 
 class EventService:
@@ -59,17 +59,16 @@ class EventService:
 
     async def get_many(
             self,
-            show_after_datetime: dt.datetime | None,
-            show_after_id: UUID | None,
-            limit: int
+            pagination_page: PaginationPage
     ) -> PaginatedEventResponse:
-        cache_key = await self._cache_client.get_many_cache_key("events", show_after_datetime, show_after_id, limit)
+        cache_key = await self._cache_client.get_many_cache_key("events", pagination_page)
         events = await self._cache_client.get_response(cache_key, PaginatedEventResponse)
         if not events:
             async with self._uow:
                 models = await self._repository.get_many(
-                    show_after_datetime,
-                    show_after_id, limit
+                    pagination_page.show_after_datetime,
+                    pagination_page.show_after_id,
+                    pagination_page.limit
                 )
             if not models:
                 raise NotFoundException(

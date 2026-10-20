@@ -1,10 +1,11 @@
-import datetime as dt
 from typing import Any, TypeVar
 from uuid import UUID
 
 import redis.asyncio as redis
 from pydantic import BaseModel
 from starlette.requests import Request
+
+from src.schemas import PaginationPage
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -25,12 +26,10 @@ class CacheClient:
     async def get_many_cache_key(
             self,
             table_name: str,
-            show_after_datetime: dt.datetime | None,
-            show_after_id: UUID | None,
-            limit: int
+            pagination_page: PaginationPage
     ) -> str:
         key_version = await self._client.get(f"{table_name}:version")
-        return f"{table_name}:v{key_version}:{show_after_id}:{show_after_datetime}:{limit}"
+        return f"{table_name}:v{key_version}:{pagination_page.show_after_id}:{pagination_page.show_after_datetime}:{pagination_page.limit}"
 
     async def get(self, key: str):
         return await self._client.get(key)
