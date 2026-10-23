@@ -37,17 +37,35 @@ class EventBase(Base):
          return self
 
 
+class ModerationDecisionBase(Base):
+    comment: str
+    is_allowed: bool
+
+
+class ModerationDecisionCreate(ModerationDecisionBase):
+    pass
+
+
+class ModerationDecisionResponse(ModerationDecisionBase):
+    id: UUID
+
+
 class EventResponse(EventBase):
     id: UUID
     event_info: EventInfoResponse
+    moderation_decision: ModerationDecisionResponse | None = None
 
+class EventManyResponse(EventBase):
+    id: UUID
+    event_info: EventInfoResponse
 
 class PaginatedEventResponse(Base, PaginatedResponse):
-    items: list[EventResponse]
+    items: list[EventManyResponse]
 
 
 class EventCreate(EventBase):
     event_info: EventInfoCreate
+    moderation_decision: ModerationDecisionCreate
 
 
 class EventUpdate(EventBase, BaseUpdateValidationMixin):
