@@ -1,15 +1,19 @@
-from typing import TypeVar
 import asyncio
 import datetime as dt
-import httpx
 import random
-from fastapi import HTTPException
-from httpx import TimeoutException, ConnectError
+from typing import TypeVar
 
+import httpx
+from fastapi import HTTPException
+from httpx import ConnectError, TimeoutException
 from pydantic import BaseModel
 from starlette.requests import Request
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_502_BAD_GATEWAY, \
-    HTTP_429_TOO_MANY_REQUESTS, HTTP_500_INTERNAL_SERVER_ERROR
+from starlette.status import (
+    HTTP_404_NOT_FOUND,
+    HTTP_429_TOO_MANY_REQUESTS,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_502_BAD_GATEWAY,
+)
 
 T = TypeVar("T", bound=BaseModel)
 

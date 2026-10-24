@@ -9,11 +9,12 @@ from sqlalchemy.ext.asyncio import (
 )
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
-from src.http import HTTPClient, RetryBudget
+
 from src.cache import CacheClient
 from src.config import Settings, settings
 from src.event.v1.router import router as event_router_v1
 from src.healthchek.healthcheck_router import router as healthcheck_router
+from src.http import HTTPClient, RetryBudget
 from src.middleware import LogMiddleware
 from src.project.v1.router import router as project_router_v1
 from src.user.v1.router import router as user_router_v1
