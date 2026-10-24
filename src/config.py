@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     max_retry_count: int
     max_delay_ms: int
     delay_base_ms: int
+    allowed_retries_percentage: float
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR /".env",

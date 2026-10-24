@@ -39,7 +39,7 @@ class RetryBudget:
         self._last_minute_retries_total += 1
 
     def can_retry(self) -> bool:
-        return self._last_minute_retries_total < self._allowed_retries_percentage * self._last_minute_requests_total
+        return self._last_minute_retries_total <= self._allowed_retries_percentage * self._last_minute_requests_total
 
 class HTTPClient:
     def __init__(self, client: httpx.AsyncClient, max_retry_count: int, max_delay_ms: int, delay_base_ms, retry_budget: RetryBudget) -> None:
@@ -91,7 +91,15 @@ class HTTPClient:
         )
 
     async def post(self, *args, **kwargs)-> httpx.Response:
-        return await self._client.post(*args, **kwargs)
+        try:
+            response = await self._client.post(*args, **kwargs)
+            return response
+        except (TimeoutException, ConnectError) as ex:
+            raise HTTPException(
+                status_code=HTTP_502_BAD_GATEWAY,
+                detail=str(ex)
+            )
+
 
     async def get_response(self, response_model: type[T], *args, **kwargs, ) -> T :
         response = await self.get(*args, **kwargs)

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
-from src.http import HTTPClient
+from src.http import HTTPClient, RetryBudget
 from src.cache import CacheClient
 from src.config import Settings, settings
 from src.event.v1.router import router as event_router_v1
@@ -37,12 +37,13 @@ def make_lifespan(settings: Settings):
         # TODO (egor): в конфиг
         app.state.moderation_api_url = "http://localhost:8001/"
         httpx_client = httpx.AsyncClient()
-
+        retry_budget = RetryBudget(settings.allowed_retries_percentage)
         app.state.http_client = HTTPClient(
             client=httpx_client,
             max_retry_count=settings.max_retry_count,
             max_delay_ms=settings.max_delay_ms,
             delay_base_ms=settings.delay_base_ms,
+            retry_budget=retry_budget
         )
 
         try:
