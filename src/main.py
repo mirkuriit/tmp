@@ -35,8 +35,8 @@ def make_lifespan(settings: Settings):
         engine = create_async_engine(settings.postgres_url, pool_pre_ping=True)
         app.state.db_engine = engine
         app.state.SessionFactory = async_sessionmaker(engine, expire_on_commit=False)
-        # TODO (egor): в конфиг
-        app.state.moderation_api_url = "http://localhost:8001/"
+
+        app.state.moderation_api_url = settings.moderation_api_url
         httpx_client = httpx.AsyncClient()
         retry_budget = RetryBudget(settings.allowed_retries_percentage)
         app.state.http_client = HTTPClient(

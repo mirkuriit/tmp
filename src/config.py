@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     max_delay_ms: int
     delay_base_ms: int
     allowed_retries_percentage: float
+    moderation_api_url: str
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR /".env",

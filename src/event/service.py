@@ -60,7 +60,6 @@ class EventService:
         if not event:
             async with self._uow:
                 moderation_api_response = await self._http_client.get_response(
-                    # TODO (egor): номральные пути а не стринги ебучие
                     url=self.moderation_api_url + f"moderation_decision/v1/{moderation_decision_id}",
                     response_model=ModerationDecisionResponse,
                 )
@@ -98,7 +97,6 @@ class EventService:
                 create_schema
             )
         moderation_api_response = await self._http_client.post_response(
-            # TODO (egor): номральные пути а не стринги ебучие
             url=self.moderation_api_url + "moderation_decision/v1",
             json=self._mapper.schema_to_dict(data.moderation_decision),
             response_model=ModerationDecisionResponse,
