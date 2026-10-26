@@ -8,6 +8,7 @@ from src.event.schema import (
     EventCreate,
     EventResponse,
     EventUpdate,
+    ModerationDecisionResponse,
     PaginatedEventResponse,
 )
 from src.event_info.model import EventInfo
@@ -26,8 +27,13 @@ class EventMapper:
         )
 
     @staticmethod
-    def model_to_schema(data: Event) -> EventResponse:
-        return EventResponse.model_validate(data)
+    def model_to_schema(
+            data: Event,
+            moderation_decision: ModerationDecisionResponse | None = None
+    ) -> EventResponse:
+        event_response = EventResponse.model_validate(data)
+        event_response.moderation_decision = moderation_decision
+        return event_response
 
     @staticmethod
     def models_to_pagination_schema(events: Sequence[Event]) -> PaginatedEventResponse:

@@ -12,9 +12,12 @@ from starlette.responses import JSONResponse
 
 from src.cache import CacheClient
 from src.config import Settings, settings
+from src.event.service_moderation_decision_client import (
+    ModerationDecisionClient,
+    RetryBudget,
+)
 from src.event.v1.router import router as event_router_v1
 from src.healthchek.healthcheck_router import router as healthcheck_router
-from src.http import HTTPClient, RetryBudget
 from src.middleware import LogMiddleware
 from src.project.v1.router import router as project_router_v1
 from src.user.v1.router import router as user_router_v1
@@ -39,12 +42,13 @@ def make_lifespan(settings: Settings):
         app.state.moderation_api_url = settings.moderation_api_url
         httpx_client = httpx.AsyncClient()
         retry_budget = RetryBudget(settings.allowed_retries_percentage)
-        app.state.http_client = HTTPClient(
+        app.state.moderation_decision_client = ModerationDecisionClient(
             client=httpx_client,
             max_retry_count=settings.max_retry_count,
             max_delay_ms=settings.max_delay_ms,
             delay_base_ms=settings.delay_base_ms,
-            retry_budget=retry_budget
+            retry_budget=retry_budget,
+            moderation_api_url=settings.moderation_api_url
         )
 
         try:

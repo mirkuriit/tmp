@@ -17,16 +17,16 @@ services:
     volumes:
       - redis_data:/data
 
-  app:
-    build: .
-    ports:
-      - "8000:8000"
-    env_file:
-      - .docker.env
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
+#  app:
+#    build: .
+#    ports:
+#      - "8000:8000"
+#    env_file:
+#      - .docker.env
+#    depends_on:
+#      - postgres
+#      - redis
+#    restart: unless-stopped
 
 volumes:
   postgres_data:
