@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     redis_url: str
     log_level: str
     default_cache_key_ttl: int
+    max_retry_count: int
+    max_delay_ms: int
+    delay_base_ms: int
+    allowed_retries_percentage: float
+    moderation_api_url: str
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR /".env",

@@ -12,8 +12,10 @@ from src.event.schema import (
     EventCreate,
     EventResponse,
     EventUpdate,
+    ModerationDecisionResponse,
     PaginatedEventResponse,
 )
+from src.event.service_moderation_decision_client import ModerationDecisionClient
 from src.exceptions import DuplicateFieldException, NotFoundException
 from src.logger import logger
 from src.schemas import PaginationPage
@@ -24,11 +26,14 @@ class EventService:
             self,
             mapper: EventMapper,
             cache_client: CacheClient,
+            moderation_decision_client: ModerationDecisionClient,
             repository: EventRepository,
-            uow: UnitOfWork
+            uow: UnitOfWork,
+
     ) -> None:
         self._mapper = mapper
         self._cache_client = cache_client
+        self._moderation_decision_client = moderation_decision_client
         self._repository = repository
         self._uow = uow
 
@@ -47,13 +52,17 @@ class EventService:
             raise exception
         return event
 
-    async def get_one(self, event_id: UUID) -> EventResponse:
+    async def get_one(self, event_id: UUID, moderation_decision_id: UUID) -> EventResponse:
         cache_key = self._cache_client.get_one_cache_key(event_id, "event")
         event = await self._cache_client.get_response(cache_key, EventResponse)
         if not event:
+            moderation_api_response = await self._moderation_decision_client.get_response(
+                moderation_decision_id=moderation_decision_id,
+                response_model=ModerationDecisionResponse,
+            )
             async with self._uow:
                 event = await self._get_one(event_id)
-            event = self._mapper.model_to_schema(event)
+            event = self._mapper.model_to_schema(event, moderation_api_response)
             await self._cache_client.set_response(cache_key, event)
         return event
 
@@ -84,8 +93,15 @@ class EventService:
             event = await self._repository.create(
                 create_schema
             )
+        moderation_api_response = await self._moderation_decision_client.post_response(
+            json=self._mapper.schema_to_dict(data.moderation_decision),
+            response_model=ModerationDecisionResponse,
+        )
         await self._cache_client.update_get_many_cache_key_version("events")
-        return self._mapper.model_to_schema(event)
+        event = self._mapper.model_to_schema(event)
+        event.moderation_decision = moderation_api_response
+
+        return event
 
     async def update(
             self,

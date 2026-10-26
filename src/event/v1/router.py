@@ -35,12 +35,13 @@ async def get_events(
    return await event_service.get_many(pagination_page)
 
 
-@router.get("/{event_id}")
+@router.get("/{event_id}/{moderation_decision_id}")
 async def get_event(
         event_id: UUID,
+        moderation_decision_id: UUID,
         event_service: Annotated[EventService, Depends(event_service_dependency)]
 ) -> EventResponse:
-   return await event_service.get_one(event_id)
+   return await event_service.get_one(event_id, moderation_decision_id)
 
 
 @router.patch("/{event_id}")
