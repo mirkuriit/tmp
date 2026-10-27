@@ -1,14 +1,20 @@
 from uuid import UUID
 
 from fastapi.exceptions import HTTPException
-from starlette.status import HTTP_409_CONFLICT, HTTP_404_NOT_FOUND, \
-    HTTP_500_INTERNAL_SERVER_ERROR, HTTP_502_BAD_GATEWAY
+from starlette.status import (
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_502_BAD_GATEWAY,
+)
 
 from src.cache import CacheClient
 from src.db import UnitOfWork
-from src.event.exceptions import ModerationDecisionNotFoundError, \
-    ModerationDecisionClientInternalError, \
-    ModerationDecisionClientExternalError
+from src.event.exceptions import (
+    ModerationDecisionClientExternalError,
+    ModerationDecisionClientInternalError,
+    ModerationDecisionNotFoundError,
+)
 from src.event.mapper import EventMapper
 from src.event.model import Event
 from src.event.repository import EventRepository

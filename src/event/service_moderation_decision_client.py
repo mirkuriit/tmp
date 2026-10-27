@@ -5,19 +5,19 @@ from typing import Any, TypeVar
 from uuid import UUID, uuid4
 
 import httpx
-from fastapi import HTTPException
 from httpx import ConnectError, TimeoutException
 from pydantic import BaseModel
 from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_429_TOO_MANY_REQUESTS,
     HTTP_500_INTERNAL_SERVER_ERROR,
-    HTTP_502_BAD_GATEWAY,
 )
 
-from src.event.exceptions import ModerationDecisionNotFoundError, \
-    ModerationDecisionClientInternalError, \
-    ModerationDecisionClientExternalError
+from src.event.exceptions import (
+    ModerationDecisionClientExternalError,
+    ModerationDecisionClientInternalError,
+    ModerationDecisionNotFoundError,
+)
 
 T = TypeVar("T", bound=BaseModel)
 
