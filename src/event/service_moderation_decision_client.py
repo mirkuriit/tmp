@@ -2,7 +2,7 @@ import asyncio
 import datetime as dt
 import random
 from typing import Any, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import httpx
 from httpx import ConnectError, TimeoutException
@@ -18,6 +18,7 @@ from src.event.exceptions import (
     ModerationDecisionClientInternalError,
     ModerationDecisionNotFoundError,
 )
+from src.event.schema import ModerationDecisionResponse
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -94,10 +95,9 @@ class ModerationDecisionClient:
 
         raise ModerationDecisionClientExternalError(message="The external service sent an invalid response.")
 
-    async def post(self, json: dict[str, Any])-> httpx.Response:
+    async def post(self, json: dict[str, Any], idempotency_key: UUID)-> httpx.Response:
         # TODO воркер
         self._retry_budget.add_request()
-        idempotency_key = uuid4()
         attempt_count = 0
         while True:
             attempt_count += 1
@@ -128,10 +128,10 @@ class ModerationDecisionClient:
             message="The external service sent an invalid response."
         )
 
-    async def get_response(self, moderation_decision_id: UUID, response_model: type[T], *args, **kwargs, ) -> T :
+    async def get_response(self, moderation_decision_id: UUID, response_model: type[ModerationDecisionResponse]) -> ModerationDecisionResponse:
         response = await self.get(moderation_decision_id=moderation_decision_id)
         return response_model.model_validate(response.json())
 
-    async def post_response(self, json: dict[str, Any], response_model: type[T]) -> T:
-        response = await self.post(json=json)
+    async def post_response(self, json: dict[str, Any], response_model: type[ModerationDecisionResponse], idempotency_key: UUID) -> ModerationDecisionResponse:
+        response = await self.post(json=json, idempotency_key=idempotency_key)
         return response_model.model_validate(response.json())

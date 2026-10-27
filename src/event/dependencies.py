@@ -7,6 +7,7 @@ from src.cache import CacheClient, cache_client_dependency
 from src.db import SessionDependency, UnitOfWork, uow_dependency
 from src.event.mapper import EventMapper
 from src.event.repository import EventRepository
+from src.event.saga import CreateEventSaga
 from src.event.service import EventService
 from src.event.service_moderation_decision_client import ModerationDecisionClient
 
@@ -41,4 +42,16 @@ def event_service_dependency(
         mapper=mapper,
         uow=uow,
 
+    )
+
+
+def create_event_saga_dependency(
+        event_service: Annotated[EventService, Depends(event_service_dependency)],
+        moderation_decision_client: Annotated[ModerationDecisionClient, Depends(http_moderation_decision_client_dependency)],
+        mapper: Annotated[EventMapper, Depends(event_mapper)],
+) -> CreateEventSaga:
+    return CreateEventSaga(
+        event_service=event_service,
+        moderation_decision_client=moderation_decision_client,
+        mapper=mapper,
     )

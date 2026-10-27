@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.event.mapper import EventMapper
-from src.event.model import Event
+from src.event.model import Event, ModerationDecisionStatus
 from src.event.schema import EventUpdate
 from src.exceptions import DuplicateFieldException
 
@@ -75,6 +75,17 @@ class EventRepository:
             if constraint == "events_name_key":
                 raise DuplicateFieldException(detail=f"Event with name '{updated_schema.name}' already exists") from ex
             raise
+
+
+    @staticmethod
+    async def set_moderation_decision_status(
+            event: Event,
+            status: ModerationDecisionStatus,
+            moderation_decision_id: UUID | None
+    )-> Event:
+        event.moderation_decision_id = moderation_decision_id
+        event.moderation_decision_status = status
+        return event
 
 
     async def delete(self, event: Event) -> Event:

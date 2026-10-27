@@ -6,6 +6,7 @@ from pydantic import field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
 from src.event.exceptions import InvalidStartDateError
+from src.event.model import ModerationDecisionStatus
 from src.event_info.schema import EventInfoCreate, EventInfoResponse, EventInfoUpdate
 from src.schemas import Base, BaseUpdateValidationMixin, PaginatedResponse
 
@@ -53,13 +54,13 @@ class ModerationDecisionResponse(ModerationDecisionBase):
 
 class EventResponse(EventBase):
     id: UUID
-    moderation_decision_id: UUID | None = None
     event_info: EventInfoResponse
+    moderation_decision_status: ModerationDecisionStatus
     moderation_decision: ModerationDecisionResponse | None = None
+    moderation_decision_id: UUID | None = None
 
 class EventManyResponse(EventBase):
     id: UUID
-    moderation_decision_id: UUID | None = None
     event_info: EventInfoResponse
 
 class PaginatedEventResponse(Base, PaginatedResponse):
