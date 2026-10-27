@@ -53,11 +53,13 @@ class ModerationDecisionResponse(ModerationDecisionBase):
 
 class EventResponse(EventBase):
     id: UUID
+    moderation_decision_id: UUID | None = None
     event_info: EventInfoResponse
     moderation_decision: ModerationDecisionResponse | None = None
 
 class EventManyResponse(EventBase):
     id: UUID
+    moderation_decision_id: UUID | None = None
     event_info: EventInfoResponse
 
 class PaginatedEventResponse(Base, PaginatedResponse):

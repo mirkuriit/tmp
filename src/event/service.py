@@ -62,26 +62,28 @@ class EventService:
             raise exception
         return event
 
-    async def get_one(self, event_id: UUID, moderation_decision_id: UUID) -> EventResponse:
+    async def get_one(self, event_id: UUID) -> EventResponse:
         cache_key = self._cache_client.get_one_cache_key(event_id, "event")
         event = await self._cache_client.get_response(cache_key, EventResponse)
         if not event:
-            try:
-                moderation_api_response = await self._moderation_decision_client.get_response(
-                    moderation_decision_id=moderation_decision_id,
-                    response_model=ModerationDecisionResponse,
-                )
-            except ModerationDecisionNotFoundError as ex:
-                raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=ex.message)
-            except ModerationDecisionClientInternalError as ex:
-                raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=ex.message)
-            except ModerationDecisionClientExternalError as ex:
-                raise HTTPException(
-                    status_code=HTTP_502_BAD_GATEWAY,
-                    detail=ex.message
-                )
             async with self._uow:
                 event = await self._get_one(event_id)
+            moderation_api_response = None
+            if event.moderation_decision_id is not None:
+                try:
+                    moderation_api_response = await self._moderation_decision_client.get_response(
+                        moderation_decision_id=event.moderation_decision_id,
+                        response_model=ModerationDecisionResponse,
+                    )
+                except ModerationDecisionNotFoundError as ex:
+                    raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=ex.message)
+                except ModerationDecisionClientInternalError as ex:
+                    raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=ex.message)
+                except ModerationDecisionClientExternalError as ex:
+                    raise HTTPException(
+                        status_code=HTTP_502_BAD_GATEWAY,
+                        detail=ex.message
+                    )
             event = self._mapper.model_to_schema(event, moderation_api_response)
             await self._cache_client.set_response(cache_key, event)
         return event
@@ -108,7 +110,6 @@ class EventService:
         return events
 
     async def create(self, data: EventCreate) -> EventResponse:
-        create_schema = self._mapper.schema_to_model(data)
         try:
             moderation_api_response = await self._moderation_decision_client.post_response(
                 json=self._mapper.schema_to_dict(data.moderation_decision),
@@ -124,6 +125,7 @@ class EventService:
                 status_code=HTTP_502_BAD_GATEWAY,
                 detail=ex.message
             )
+        create_schema = self._mapper.schema_to_model(data, moderation_api_response.id)
         async with self._uow:
             event = await self._repository.create(
                 create_schema

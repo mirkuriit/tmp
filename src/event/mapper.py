@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -20,9 +21,10 @@ class EventMapper:
         return data.model_dump()
 
     @staticmethod
-    def schema_to_model(data: EventCreate) -> Event:
+    def schema_to_model(data: EventCreate, moderation_decision_id: UUID) -> Event:
         return Event(
             **data.model_dump(exclude={"event_info", "moderation_decision"}),
+            moderation_decision_id=moderation_decision_id,
             event_info=EventInfo(**data.event_info.model_dump())
         )
 
