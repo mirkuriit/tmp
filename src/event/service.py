@@ -152,7 +152,7 @@ class EventService:
                 moderation_decision_id
             )
         event_response = self._mapper.model_to_schema(updated_event)
-        await self._cache_client.set_response(self._cache_client.get_one_cache_key(event_id, "event"), event_response)
+        await self._cache_client.delete(self._cache_client.get_one_cache_key(event_id, "event"))
         await self._cache_client.update_get_many_cache_key_version("events")
         return event_response
 
