@@ -2,7 +2,7 @@ import asyncio
 import datetime as dt
 import random
 from typing import Any, TypeVar
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
 from fastapi import HTTPException
@@ -14,6 +14,10 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
     HTTP_502_BAD_GATEWAY,
 )
+
+from src.event.exceptions import ModerationDecisionNotFoundError, \
+    ModerationDecisionClientInternalError, \
+    ModerationDecisionClientExternalError
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -78,11 +82,40 @@ class ModerationDecisionClient:
             if response.is_success:
                 return response
             if response.status_code == HTTP_404_NOT_FOUND:
-                raise HTTPException(status_code=HTTP_404_NOT_FOUND)
+                raise ModerationDecisionNotFoundError(message="Moderation decision not found.")
             if response.status_code < HTTP_500_INTERNAL_SERVER_ERROR and response.status_code != HTTP_429_TOO_MANY_REQUESTS:
-                raise HTTPException(
-                    status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Internal server error"
+                raise ModerationDecisionClientInternalError(message="Internal server error.")
+
+            if self._retry_budget.can_retry() and attempt_count < self._MAX_RETRY_COUNT:
+                self._retry_budget.add_retry()
+                await self.sleep_for_retry(attempt_count)
+            else:
+                break
+
+        raise ModerationDecisionClientExternalError(message="The external service sent an invalid response.")
+
+    async def post(self, json: dict[str, Any])-> httpx.Response:
+        # TODO воркер
+        self._retry_budget.add_request()
+        idempotency_key = uuid4()
+        attempt_count = 0
+        while True:
+            attempt_count += 1
+            try:
+                response = await self._client.post(url=self._base_url, json=json, headers={"idempotency-key": str(idempotency_key)})
+            except (TimeoutException, ConnectError):
+                if self._retry_budget.can_retry() and attempt_count < self._MAX_RETRY_COUNT:
+                    self._retry_budget.add_retry()
+                    await self.sleep_for_retry(attempt_count)
+                    continue
+                else:
+                    break
+
+            if response.is_success:
+                return response
+            if response.status_code < HTTP_500_INTERNAL_SERVER_ERROR and response.status_code != HTTP_429_TOO_MANY_REQUESTS:
+                raise ModerationDecisionClientInternalError(
+                    message="Internal server error."
                 )
 
             if self._retry_budget.can_retry() and attempt_count < self._MAX_RETRY_COUNT:
@@ -91,23 +124,11 @@ class ModerationDecisionClient:
             else:
                 break
 
-        raise HTTPException(
-            status_code=HTTP_502_BAD_GATEWAY,
-            detail="The external service sent an invalid response."
+        raise ModerationDecisionClientExternalError(
+            message="The external service sent an invalid response."
         )
 
-    async def post(self, json: dict[str, Any])-> httpx.Response:
-        try:
-            response = await self._client.post(url=self._base_url, json=json)
-            return response
-        except (TimeoutException, ConnectError) as ex:
-            raise HTTPException(
-                status_code=HTTP_502_BAD_GATEWAY,
-                detail=str(ex)
-            )
-
     async def get_response(self, moderation_decision_id: UUID, response_model: type[T], *args, **kwargs, ) -> T :
-
         response = await self.get(moderation_decision_id=moderation_decision_id)
         return response_model.model_validate(response.json())
 
