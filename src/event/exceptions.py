@@ -12,6 +12,12 @@ class ModerationDecisionNotFoundError(Exception):
         self.message = message
 
 
+class EventNotFoundError(Exception):
+    def __init__(self, message: str)-> None:
+        super().__init__(message)
+        self.message = message
+
+
 class ModerationDecisionClientInternalError(Exception):
     def __init__(self, message: str)-> None:
         super().__init__(message)

@@ -11,7 +11,7 @@ from src.event.model import ModerationDecisionStatus
 from src.event.schema import EventCreate, EventResponse, ModerationDecisionResponse
 from src.event.service import EventService
 from src.event.service_moderation_decision_client import ModerationDecisionClient
-
+from src.event.celery_tasks import try_recover_moderation_decision
 
 class CreateEventSaga:
     def __init__(
@@ -45,7 +45,6 @@ class CreateEventSaga:
             return event
 
         except ModerationDecisionClientInternalError as ex:
-            # ничего т.к. мы накосячили с контрактом,
             await self._event_service.delete(event_id=event.id)
             raise HTTPException(
                 status_code=HTTP_500_INTERNAL_SERVER_ERROR,
@@ -53,10 +52,13 @@ class CreateEventSaga:
             )
 
         except ModerationDecisionClientExternalError:
-            # TODO: запустить фоном воркер
             event = await self._event_service.set_moderation_decision_status(
                 event_id=event.id,
                 status=ModerationDecisionStatus.PENDING,
                 moderation_decision_id=None
+            )
+            try_recover_moderation_decision.delay(
+                moderation_decision=self._mapper.schema_to_dict(data.moderation_decision),
+                event_id=str(event.id),
             )
             return event
