@@ -96,7 +96,6 @@ class ModerationDecisionClient:
         raise ModerationDecisionClientExternalError(message="The external service sent an invalid response.")
 
     async def post(self, json: dict[str, Any], idempotency_key: UUID)-> httpx.Response:
-        # TODO воркер
         self._retry_budget.add_request()
         attempt_count = 0
         while True:
