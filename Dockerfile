@@ -12,5 +12,3 @@ COPY ./pyproject.toml ./poetry.lock /app/
 RUN poetry install --no-root --without dev
 
 COPY . /app
-
-CMD ["/app/start.sh"]
