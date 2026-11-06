@@ -6,7 +6,11 @@ from starlette import status
 from starlette.status import HTTP_204_NO_CONTENT
 
 from src.dependencies import pagination_page_dependency
-from src.event.dependencies import event_service_dependency
+from src.event.dependencies import (
+   create_event_saga_dependency,
+   event_service_dependency,
+)
+from src.event.saga import CreateEventSaga
 from src.event.schema import (
    EventCreate,
    EventResponse,
@@ -22,9 +26,9 @@ router = APIRouter(prefix="/event/v1", tags=["Event V1"])
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_event(
         data: EventCreate,
-        event_service: Annotated[EventService, Depends(event_service_dependency)]
+        create_event_saga: Annotated[CreateEventSaga, Depends(create_event_saga_dependency)]
 ) -> EventResponse:
-   return await event_service.create(data)
+   return await create_event_saga.run(data)
 
 
 @router.get("/")

@@ -26,6 +26,17 @@ services:
     depends_on:
       - postgres
       - redis
+    command: /app/app-start.sh
+    restart: unless-stopped
+
+  worker:
+    build: .
+    env_file:
+      - .docker.env
+    depends_on:
+      - postgres
+      - redis
+    command: /app/worker-start.sh
     restart: unless-stopped
 
 volumes:

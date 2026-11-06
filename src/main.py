@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+import httpx
 import redis.asyncio as redis
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import (
@@ -11,6 +12,10 @@ from starlette.responses import JSONResponse
 
 from src.cache import CacheClient
 from src.config import Settings, settings
+from src.event.service_moderation_decision_client import (
+    ModerationDecisionClient,
+    RetryBudget,
+)
 from src.event.v1.router import router as event_router_v1
 from src.healthchek.healthcheck_router import router as healthcheck_router
 from src.middleware import LogMiddleware
@@ -34,10 +39,23 @@ def make_lifespan(settings: Settings):
         app.state.db_engine = engine
         app.state.SessionFactory = async_sessionmaker(engine, expire_on_commit=False)
 
+        app.state.moderation_api_url = settings.moderation_api_url
+        httpx_client = httpx.AsyncClient()
+        retry_budget = RetryBudget(settings.allowed_retries_percentage)
+        app.state.moderation_decision_client = ModerationDecisionClient(
+            client=httpx_client,
+            max_retry_count=settings.max_retry_count,
+            max_delay_ms=settings.max_delay_ms,
+            delay_base_ms=settings.delay_base_ms,
+            retry_budget=retry_budget,
+            moderation_api_url=settings.moderation_api_url
+        )
+
         try:
             yield
         finally:
             await redis_client.aclose()
+            await httpx_client.aclose()
             await engine.dispose()
 
     return lifespan

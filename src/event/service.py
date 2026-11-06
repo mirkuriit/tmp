@@ -1,19 +1,31 @@
 from uuid import UUID
 
 from fastapi.exceptions import HTTPException
-from starlette.status import HTTP_409_CONFLICT
+from starlette.status import (
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_502_BAD_GATEWAY,
+)
 
 from src.cache import CacheClient
 from src.db import UnitOfWork
+from src.event.exceptions import (
+    ModerationDecisionClientExternalError,
+    ModerationDecisionClientInternalError,
+    ModerationDecisionNotFoundError,
+)
 from src.event.mapper import EventMapper
-from src.event.model import Event
+from src.event.model import Event, ModerationDecisionStatus
 from src.event.repository import EventRepository
 from src.event.schema import (
     EventCreate,
     EventResponse,
     EventUpdate,
+    ModerationDecisionResponse,
     PaginatedEventResponse,
 )
+from src.event.service_moderation_decision_client import ModerationDecisionClient
 from src.exceptions import DuplicateFieldException, NotFoundException
 from src.logger import logger
 from src.schemas import PaginationPage
@@ -24,11 +36,14 @@ class EventService:
             self,
             mapper: EventMapper,
             cache_client: CacheClient,
+            moderation_decision_client: ModerationDecisionClient,
             repository: EventRepository,
-            uow: UnitOfWork
+            uow: UnitOfWork,
+
     ) -> None:
         self._mapper = mapper
         self._cache_client = cache_client
+        self._moderation_decision_client = moderation_decision_client
         self._repository = repository
         self._uow = uow
 
@@ -53,7 +68,23 @@ class EventService:
         if not event:
             async with self._uow:
                 event = await self._get_one(event_id)
-            event = self._mapper.model_to_schema(event)
+            moderation_api_response = None
+            if event.moderation_decision_id is not None:
+                try:
+                    moderation_api_response = await self._moderation_decision_client.get_response(
+                        moderation_decision_id=event.moderation_decision_id,
+                        response_model=ModerationDecisionResponse,
+                    )
+                except ModerationDecisionNotFoundError as ex:
+                    raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=ex.message)
+                except ModerationDecisionClientInternalError as ex:
+                    raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=ex.message)
+                except ModerationDecisionClientExternalError as ex:
+                    raise HTTPException(
+                        status_code=HTTP_502_BAD_GATEWAY,
+                        detail=ex.message
+                    )
+            event = self._mapper.model_to_schema(event, moderation_api_response)
             await self._cache_client.set_response(cache_key, event)
         return event
 
@@ -85,7 +116,7 @@ class EventService:
                 create_schema
             )
         await self._cache_client.update_get_many_cache_key_version("events")
-        return self._mapper.model_to_schema(event)
+        return  self._mapper.model_to_schema(event)
 
     async def update(
             self,
@@ -105,6 +136,26 @@ class EventService:
         await self._cache_client.set_response(self._cache_client.get_one_cache_key(event_id, "event"), event_response)
         await self._cache_client.update_get_many_cache_key_version("events")
         return event_response
+
+
+    async def set_moderation_decision_status(
+            self,
+            event_id: UUID,
+            status: ModerationDecisionStatus,
+            moderation_decision_id: UUID | None
+    )-> EventResponse:
+        async with self._uow:
+            event = await self._get_one(event_id)
+            updated_event = await self._repository.set_moderation_decision_status(
+                event,
+                status,
+                moderation_decision_id
+            )
+        event_response = self._mapper.model_to_schema(updated_event)
+        await self._cache_client.delete(self._cache_client.get_one_cache_key(event_id, "event"))
+        await self._cache_client.update_get_many_cache_key_version("events")
+        return event_response
+
 
     async def delete(
             self,
